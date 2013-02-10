@@ -8,8 +8,8 @@ import json
 
 from celery import Celery
 
-celery = Celery('tasks')
-celery.config_from_object('celeryconfig')
+address = os.environ['OPENSHIFT_INTERNAL_IP']
+celery = Celery('tasks', broker='redis://%s:15002/0' % address)
 
 
 @celery.task
