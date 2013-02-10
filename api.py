@@ -48,7 +48,7 @@ class MainHandler(tornado.web.RequestHandler):
 
         if chunk:  # md5.md5(chunk).hexdigest()
             TMP = os.path.join(os.environ['OPENSHIFT_TMP_DIR'], "%s.%d.chunk" % (self.path, self.chunk_num))
-            sh.mkdir('-p', sh.dirname(TMP))
+            sh.mkdir('-p', sh.dirname(TMP).strip())
             with file(TMP, "wb") as f:
                 f.write(chunk)
             self.chunk_num += 1
