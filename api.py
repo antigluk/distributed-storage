@@ -27,6 +27,7 @@ def process_chunk(path, num, chunk_file, hash):
     #All ok
     if js.get('server') == 'local':
         #Store file locally in data
+        sh.mkdir('-p', os.path.join(datadir, 'local_storage'))
         sh.mv(chunk_file, os.path.join(datadir, 'local_storage', hash))
 
     with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
