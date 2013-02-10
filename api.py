@@ -8,8 +8,8 @@ import json
 
 from celery import Celery
 
-
-celery = Celery('tasks', broker='amqp://guest@localhost//')
+celery = Celery('tasks')
+celery.config_from_object('celeryconfig')
 
 
 @celery.task
