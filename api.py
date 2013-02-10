@@ -88,5 +88,5 @@ class MainHandler(tornado.web.RequestHandler):
 
     def uploaded(self):
         self.write('Uploaded %d bytes' % self.read_bytes)
-        register_file.delay(self.path, self.hashes)
+        register_file.delay(self.path, self.chunks)
         self.finish()
