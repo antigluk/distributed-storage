@@ -15,8 +15,7 @@ celery.config_from_object('celeryconfig')
 @celery.task
 def process_chunk(path, num, chunk_file, hash):
     address = os.environ['OPENSHIFT_INTERNAL_IP']
-    req = urllib2.Request("http://%s:15001/chunk/%s" % (address, hash), '123')
-    js = json.loads(urllib2.urlopen(req).read())
+    js = json.loads(urllib2.urlopen("http://%s:15001/chunk/%s" % (address, hash)).read())
     datadir = os.environ['OPENSHIFT_DATA_DIR']
 
     if not js.get('result') == 'OK':
