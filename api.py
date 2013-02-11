@@ -9,6 +9,8 @@ import cPickle as pickle
 
 from celery import Celery
 
+from .storages import storages
+
 address = os.environ['OPENSHIFT_INTERNAL_IP']
 celery = Celery('tasks', broker='redis://%s:15002/0' % address)
 
@@ -26,11 +28,8 @@ def process_chunk(path, num, chunk_file, hash):
         return
 
     #All ok
-    if js.get('server').strip() == 'local':
-        #Store file locally in data
-        sh.mkdir('-p', os.path.join(datadir, 'local_storage'))
-        sh.mv(chunk_file, os.path.join(datadir, 'local_storage', hash))
-        sh.rm('-f', chunk_file)
+    storage = storages[js.get('server').strip()]
+    storage.store_chunk(chunk_file, hash)
 
     with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
             f.write("Chunk saved %s for file %s (%d) with hash %s\n" %
@@ -56,11 +55,18 @@ def register_file(path, hashes):
         f.write("File saved %s" % path)
 
 
+def get_chunks_for_file(path):
+    address = os.environ['OPENSHIFT_INTERNAL_IP']
+    url = "http://%s:15001/file/%s" % (address, path)
+    string = urllib2.urlopen(url).read()
+
+
 @tornado.web.stream_body
 class MainHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self, path):
-        address = os.environ['OPENSHIFT_INTERNAL_IP']
+        
+        url = "http://%s:15001/get_file/%s" % (address, path)
         string = urllib2.urlopen("http://%s:15001/" % address).read()
         self.write(string)
         self.finish()

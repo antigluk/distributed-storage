@@ -52,8 +52,11 @@ def add_file(path):
 
 @app.route('/get_file/<path>')
 def get_file(path):
-    files_rs.lrange(path, 0, -1)
-    js = json.dumps({"result": "OK"})
+    chunks = {}
+    for hash in files_rs.lrange(path, 0, -1):
+        chunks[hash] = chunks_rs.get(hash)
+
+    js = json.dumps({"result": "OK", "data": chunks})
     return Response(js, status=200, mimetype='application/json')
 
 
