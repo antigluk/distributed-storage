@@ -58,17 +58,18 @@ def register_file(path, hashes):
 def get_chunks_for_file(path):
     address = os.environ['OPENSHIFT_INTERNAL_IP']
     url = "http://%s:15001/file/%s" % (address, path)
-    string = urllib2.urlopen(url).read()
+    js = json.loads(urllib2.urlopen(url).read())
+    if js['result'] == 'OK':
+        return js['data']
 
 
 @tornado.web.stream_body
 class MainHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self, path):
-        
-        url = "http://%s:15001/get_file/%s" % (address, path)
-        string = urllib2.urlopen("http://%s:15001/" % address).read()
-        self.write(string)
+        for chunk, server in get_chunks_for_file(path).iteritems():
+            self.write(storages[server].get_chunk(chunk))
+
         self.finish()
 
     def put(self, path):
