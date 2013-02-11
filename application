@@ -3,11 +3,12 @@ import os
 
 import tornado.web
 import tornado.ioloop
-from api import MainHandler
+from api import MainHandler, GetHandler
 
 
 application = tornado.web.Application([
     (r"/data/(.*)", MainHandler),
+    (r"/get/(.*)", GetHandler),
 ])
 
 if __name__ == "__main__":

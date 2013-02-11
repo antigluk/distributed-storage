@@ -63,14 +63,17 @@ def get_chunks_for_file(path):
         return js['data']
 
 
-@tornado.web.stream_body
-class MainHandler(tornado.web.RequestHandler):
+class GetHandler(tornado.web.RequestHandler):
+    @tornado.web.asynchronous
     def get(self, path):
         for chunk, server in get_chunks_for_file(path).iteritems():
             self.write(storages[server].get_chunk(chunk))
 
         self.finish()
 
+
+@tornado.web.stream_body
+class MainHandler(tornado.web.RequestHandler):
     def put(self, path):
         self.read_bytes = 0
         self.chunk_num = 0
