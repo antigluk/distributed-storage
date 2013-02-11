@@ -50,7 +50,7 @@ def add_file(path):
     return Response(js, status=200, mimetype='application/json')
 
 
-@app.route('/get_file/<path>')
+@app.route('/get_file/<path:path>')
 def get_file(path):
     chunks = {}
     for hash in files_rs.lrange(path, 0, -1):
