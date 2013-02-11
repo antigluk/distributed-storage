@@ -52,11 +52,14 @@ def add_file(path):
 
 @app.route('/get_file/<path:path>')
 def get_file(path):
-    chunks = {}
-    for hash in files_rs.lrange(path, 0, -1):
-        chunks[hash] = chunks_rs.get(hash)
+    chunks = []
+    servers = []
 
-    js = json.dumps({"result": "OK", "data": chunks})
+    for hash in files_rs.lrange(path, 0, -1):
+        chunks.append(hash)
+        servers.append(chunks_rs.get(hash))
+
+    js = json.dumps({"result": "OK", "chunks": chunks, "servers": servers})
     return Response(js, status=200, mimetype='application/json')
 
 

@@ -60,14 +60,14 @@ def get_chunks_for_file(path):
     url = "http://%s:15001/get_file/%s" % (address, path)
     js = json.loads(urllib2.urlopen(url).read())
     if js['result'] == 'OK':
-        return js['data']
+        return zip(js['chunks'], js['servers'])
 
 
 @tornado.web.stream_body
 class MainHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self, path):
-        for chunk, server in reversed(get_chunks_for_file(path).iteritems()):
+        for chunk, server in get_chunks_for_file(path):
             self.write(storages[server].get_chunk(chunk))
 
         self.finish()
