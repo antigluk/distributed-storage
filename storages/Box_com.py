@@ -15,7 +15,7 @@ def attempts(n=3, catch=Exception):
             result = None
             while True:
                 try:
-                    result = f()
+                    result = f(*args, **kwargs)
                 except catch, e:
                     if attempts < 0:
                         raise e

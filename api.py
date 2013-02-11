@@ -32,8 +32,8 @@ def process_chunk(path, num, chunk_file, hash):
     storage.store_chunk(chunk_file, hash)
 
     with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
-            f.write("Chunk saved %s for file %s (%d) with hash %s\n" %
-                (chunk_file, path, num, hash))
+            f.write("Chunk saved %s in %s for file %s (%d) with hash %s\n" %
+                (chunk_file, js.get('server').strip(), path, num, hash))
 
 
 @celery.task
