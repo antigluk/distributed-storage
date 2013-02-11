@@ -49,8 +49,11 @@ def register_file(path, hashes):
     if not js.get('result') == 'OK':
         datadir = os.environ['OPENSHIFT_DATA_DIR']
         with file(os.path.join(datadir, 'register_file.log'), 'a+') as f:
-            f.write("File saved %s" % path)
+            f.write("Failed file save %s" % path)
         return
+
+    with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
+        f.write("File saved %s" % path)
 
 
 @tornado.web.stream_body
