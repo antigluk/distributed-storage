@@ -5,6 +5,7 @@ import urllib2
 import sha
 import sh
 import json
+import cPickle as pickle
 
 from celery import Celery
 
@@ -15,7 +16,7 @@ celery = Celery('tasks', broker='redis://%s:15002/0' % address)
 @celery.task
 def process_chunk(path, num, chunk_file, hash):
     address = os.environ['OPENSHIFT_INTERNAL_IP']
-    js = json.loads(urllib2.urlopen("http://%s:15001/chunk/%s" % (address, hash)).read())
+    js = json.loads(urllib2.urlopen("http://%s:15001/chunk/%s/%d" % (address, hash)).read())
     datadir = os.environ['OPENSHIFT_DATA_DIR']
 
     if not js.get('result') == 'OK':
@@ -25,10 +26,11 @@ def process_chunk(path, num, chunk_file, hash):
         return
 
     #All ok
-    if js.get('server') == 'local':
+    if js.get('server').strip() == 'local':
         #Store file locally in data
         sh.mkdir('-p', os.path.join(datadir, 'local_storage'))
         sh.mv(chunk_file, os.path.join(datadir, 'local_storage', hash))
+        sh.rm('-f', chunk_file)
 
     with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
             f.write("Chunk saved %s for file %s (%d) with hash %s\n" %
@@ -38,8 +40,12 @@ def process_chunk(path, num, chunk_file, hash):
 @celery.task
 def register_file(path, hashes):
     address = os.environ['OPENSHIFT_INTERNAL_IP']
-    js = json.loads(urllib2.urlopen("http://%s:15001/file/" % address).read())
+    url = "http://%s:15001/file/%s" % (address, path)
+    # js = json.loads(urllib2.urlopen().read())
 
+    data = pickle.dumps(hashes)
+    request = urllib2.Request(url, data)
+    js = json.loads(urllib2.urlopen(request).read())
     if not js.get('result') == 'OK':
         datadir = os.environ['OPENSHIFT_DATA_DIR']
         with file(os.path.join(datadir, 'register_file.log'), 'a+') as f:
