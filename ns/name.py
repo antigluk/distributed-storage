@@ -22,14 +22,18 @@ def index():
     return Response(js, status=200, mimetype='application/json')
 
 
-def find_server():
+def find_server(hash):
     #TODO:
-    return random.choice(storages.keys())
+    old = chunks_rs.get(hash)
+    if old == None:
+        return random.choice(storages.keys())
+    else:
+        return old
 
 
 @app.route('/chunk/<hash>')
 def add_chunk(hash):
-    server = find_server()
+    server = find_server(hash)
     chunks_rs.set(hash, server)
     js = json.dumps({"result": "OK", 'server': server})
 

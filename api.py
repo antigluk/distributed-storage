@@ -45,8 +45,8 @@ def register_file(path, hashes):
     data = pickle.dumps(hashes)
     request = urllib2.Request(url, data, headers={'Content-type': 'application/octet-stream'})
     js = json.loads(urllib2.urlopen(request).read())
+    datadir = os.environ['OPENSHIFT_DATA_DIR']
     if not js.get('result') == 'OK':
-        datadir = os.environ['OPENSHIFT_DATA_DIR']
         with file(os.path.join(datadir, 'register_file.log'), 'a+') as f:
             f.write("Failed file save %s" % path)
         return

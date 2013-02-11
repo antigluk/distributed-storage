@@ -19,7 +19,7 @@ class Box_com(object):
     def store_chunk(cls, chunk_file, hash):
         sh.curl(URL + hash,
             "--user", file(datadir + 'box.net.secrets').read().strip(),
-            upload_file=chunk_file)
+            "--upload_file", chunk_file)
         sh.rm('-f', chunk_file)
 
     @classmethod
