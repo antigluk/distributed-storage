@@ -67,7 +67,7 @@ def get_chunks_for_file(path):
 class MainHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self, path):
-        for chunk, server in get_chunks_for_file(path).iteritems():
+        for chunk, server in reversed(get_chunks_for_file(path).iteritems()):
             self.write(storages[server].get_chunk(chunk))
 
         self.finish()
