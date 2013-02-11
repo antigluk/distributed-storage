@@ -7,6 +7,8 @@ import cPickle as pickle
 
 from ..storages import storages
 
+import random
+
 app = Flask(__name__)
 
 address = os.environ['OPENSHIFT_INTERNAL_IP']
@@ -22,7 +24,7 @@ def index():
 
 def find_server():
     #TODO:
-    return storages.keys()[0]
+    return random.choice(storages.keys())
 
 
 @app.route('/chunk/<hash>')
