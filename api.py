@@ -16,7 +16,7 @@ celery = Celery('tasks', broker='redis://%s:15002/0' % address)
 @celery.task
 def process_chunk(path, num, chunk_file, hash):
     address = os.environ['OPENSHIFT_INTERNAL_IP']
-    js = json.loads(urllib2.urlopen("http://%s:15001/chunk/%s/%d" % (address, hash)).read())
+    js = json.loads(urllib2.urlopen("http://%s:15001/chunk/%s" % (address, hash)).read())
     datadir = os.environ['OPENSHIFT_DATA_DIR']
 
     if not js.get('result') == 'OK':
@@ -44,7 +44,7 @@ def register_file(path, hashes):
     # js = json.loads(urllib2.urlopen().read())
 
     data = pickle.dumps(hashes)
-    request = urllib2.Request(url, data)
+    request = urllib2.Request(url, data, headers={'Content-type': 'application/octet-stream'})
     js = json.loads(urllib2.urlopen(request).read())
     if not js.get('result') == 'OK':
         datadir = os.environ['OPENSHIFT_DATA_DIR']
