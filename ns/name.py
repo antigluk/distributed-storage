@@ -49,6 +49,7 @@ def get_chunk(hash):
 
 @app.route('/file/<path:path>', methods=['POST'])
 def add_file(path):
+    files_rs.delete(path)
     for item in pickle.loads(request.data):
         files_rs.rpush(path, item)
 
