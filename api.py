@@ -9,7 +9,7 @@ import cPickle as pickle
 
 from celery import Celery
 
-from .storages import storages
+from storages import storages
 
 address = os.environ['OPENSHIFT_INTERNAL_IP']
 celery = Celery('tasks', broker='redis://%s:15002/0' % address)
