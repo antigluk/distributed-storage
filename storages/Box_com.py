@@ -24,5 +24,5 @@ class Box_com(object):
 
     @classmethod
     def get_chunk(cls, hash):
-        return sh.curl(URL + hash,
-            "--user", file(datadir + 'box.net.secrets').read().strip())
+        return str(sh.curl(URL + hash,
+            "--user", file(datadir + 'box.net.secrets').read().strip()))
