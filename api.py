@@ -63,6 +63,9 @@ def get_chunks_for_file(path):
 
 @tornado.web.stream_body
 class MainHandler(tornado.web.RequestHandler):
+    # Need to implement all methods for FUSE filesystem.
+    # https://github.com/terencehonles/fusepy/blob/master/examples/sftp.py
+
     def get(self, path):
         datadir = settings.datadir
 

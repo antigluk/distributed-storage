@@ -3,7 +3,10 @@ import sh
 
 from . import Storage
 
-from .. import settings
+import sys
+#FIXME
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+import settings
 
 
 class Local(object):

@@ -2,7 +2,11 @@ import sh
 
 from . import Storage
 
-from .. import settings
+import sys
+import os
+#FIXME
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+import settings
 
 
 URL = "https://www.box.com/dav/storage/"
