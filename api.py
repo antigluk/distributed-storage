@@ -66,8 +66,14 @@ def get_chunks_for_file(path):
 @tornado.web.stream_body
 class MainHandler(tornado.web.RequestHandler):
     def get(self, path):
+        datadir = os.environ['OPENSHIFT_DATA_DIR']
+
         for chunk, server in get_chunks_for_file(path):
             self.write(storages[server].get_chunk(chunk))
+
+            with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
+                f.write("Chunk %s received %s in %s for file %s (%d) with hash %s\n" %
+                    (chunk_file, js.get('server').strip(), path, num, hash))
 
         self.finish()
 
