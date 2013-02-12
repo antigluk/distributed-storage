@@ -3,7 +3,7 @@ import sh
 
 from . import Storage
 
-datadir = os.environ['OPENSHIFT_DATA_DIR']
+from ... import settings
 
 
 class Local(object):
@@ -15,12 +15,12 @@ class Local(object):
 
     @classmethod
     def store_chunk(cls, chunk_file, hash):
-        sh.mkdir('-p', os.path.join(datadir, 'local_storage'))
-        sh.mv(chunk_file, os.path.join(datadir, 'local_storage', hash))
+        sh.mkdir('-p', os.path.join(settings.datadir, 'local_storage'))
+        sh.mv(chunk_file, os.path.join(settings.datadir, 'local_storage', hash))
         sh.rm('-f', chunk_file)
 
     @classmethod
     def get_chunk(cls, hash):
-        file_name = os.path.join(datadir, 'local_storage', hash)
+        file_name = os.path.join(settings.datadir, 'local_storage', hash)
         if os.path.exists(file_name):
             return open(file_name).read()

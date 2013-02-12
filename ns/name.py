@@ -1,17 +1,17 @@
 from flask import Flask, json, Response, request
 
 import redis
-import os
 
 import cPickle as pickle
 
 from ..storages import storages
+from ... import settings
 
 import random
 
 app = Flask(__name__)
 
-address = os.environ['OPENSHIFT_INTERNAL_IP']
+address = settings.internal_ip
 chunks_rs = redis.Redis(host=address, port=15002, db=1)
 files_rs = redis.Redis(host=address, port=15002, db=2)
 

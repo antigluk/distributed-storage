@@ -1,9 +1,9 @@
-import os
 import sh
 
 from . import Storage
 
-datadir = os.environ['OPENSHIFT_DATA_DIR']
+from ... import settings
+
 
 URL = "https://www.box.com/dav/storage/"
 
@@ -39,7 +39,7 @@ class Box_com(object):
     @attempts(n=3, catch=sh.ErrorReturnCode)
     def store_chunk(cls, chunk_file, hash):
         sh.curl(URL + hash,
-            "--user", file(datadir + 'box.net.secrets').read().strip(),
+            "--user", file(settings.datadir + 'box.net.secrets').read().strip(),
             "--upload-file", chunk_file)
         sh.rm('-f', chunk_file)
 
@@ -47,5 +47,5 @@ class Box_com(object):
     @attempts(n=3, catch=sh.ErrorReturnCode)
     def get_chunk(cls, hash):
         reply = sh.curl(URL + hash,
-            "--user", file(datadir + 'box.net.secrets').read().strip()).stdout
+            "--user", file(settings.datadir + 'box.net.secrets').read().strip()).stdout
         return reply

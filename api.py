@@ -10,16 +10,16 @@ import cPickle as pickle
 from celery import Celery
 
 from storages import storages
+import settings
 
-address = os.environ['OPENSHIFT_INTERNAL_IP']
+address = settings.internal_ip
 celery = Celery('tasks', broker='redis://%s:15002/0' % address)
 
 
 @celery.task
 def process_chunk(path, num, chunk_file, hash):
-    address = os.environ['OPENSHIFT_INTERNAL_IP']
     js = json.loads(urllib2.urlopen("http://%s:15001/chunk/%s" % (address, hash)).read())
-    datadir = os.environ['OPENSHIFT_DATA_DIR']
+    datadir = settings.datadir
 
     if not js.get('result') == 'OK':
         with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
@@ -38,14 +38,13 @@ def process_chunk(path, num, chunk_file, hash):
 
 @celery.task
 def register_file(path, hashes):
-    address = os.environ['OPENSHIFT_INTERNAL_IP']
     url = "http://%s:15001/file/%s" % (address, path)
     # js = json.loads(urllib2.urlopen().read())
 
     data = pickle.dumps(hashes)
     request = urllib2.Request(url, data, headers={'Content-type': 'application/octet-stream'})
     js = json.loads(urllib2.urlopen(request).read())
-    datadir = os.environ['OPENSHIFT_DATA_DIR']
+    datadir = settings.datadir
     if not js.get('result') == 'OK':
         with file(os.path.join(datadir, 'register_file.log'), 'a+') as f:
             f.write("Failed file save %s" % path)
@@ -56,7 +55,6 @@ def register_file(path, hashes):
 
 
 def get_chunks_for_file(path):
-    address = os.environ['OPENSHIFT_INTERNAL_IP']
     url = "http://%s:15001/get_file/%s" % (address, path)
     js = json.loads(urllib2.urlopen(url).read())
     if js['result'] == 'OK':
@@ -66,14 +64,14 @@ def get_chunks_for_file(path):
 @tornado.web.stream_body
 class MainHandler(tornado.web.RequestHandler):
     def get(self, path):
-        datadir = os.environ['OPENSHIFT_DATA_DIR']
+        datadir = settings.datadir
 
         for chunk, server in get_chunks_for_file(path):
             self.write(storages[server].get_chunk(chunk))
 
             with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
-                f.write("Chunk %s received %s in %s for file %s (%d) with hash %s\n" %
-                    (chunk_file, js.get('server').strip(), path, num, hash))
+                f.write("Chunk %s received from %s\n" %
+                    (chunk, server.strip(), ))
 
         self.finish()
 
@@ -91,7 +89,7 @@ class MainHandler(tornado.web.RequestHandler):
             self.request.content_length - self.read_bytes)
 
         if chunk:
-            TMP = os.path.join(os.environ['OPENSHIFT_TMP_DIR'], "cache", "%s.%d.chunk" % (self.path, self.chunk_num))
+            TMP = os.path.join(settings.tmpdir, "cache", "%s.%d.chunk" % (self.path, self.chunk_num))
             sh.mkdir('-p', sh.dirname(TMP).strip())
             with file(TMP, "wb") as f:
                 f.write(chunk)
