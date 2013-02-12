@@ -5,7 +5,7 @@ import redis
 import cPickle as pickle
 
 from ..storages import storages
-from ... import settings
+from .. import settings
 
 import random
 

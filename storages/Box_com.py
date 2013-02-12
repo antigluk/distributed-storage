@@ -2,7 +2,7 @@ import sh
 
 from . import Storage
 
-from ... import settings
+from .. import settings
 
 
 URL = "https://www.box.com/dav/storage/"

@@ -3,7 +3,7 @@ import sh
 
 from . import Storage
 
-from ... import settings
+from .. import settings
 
 
 class Local(object):
