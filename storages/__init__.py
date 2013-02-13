@@ -32,6 +32,7 @@ def load_storages(file_name):
             stor = storage_classes[conf.get(storage_name.strip(), "type")]()  # Storage class
             stor.identifer = storage_name
             stor.__dict__.update(dict(conf.items(storage_name.strip())))
+            storages[storage_name] = stor
     except ConfigParser.Error, e:
         print "ERROR: Broken config, %s" % e.message
 

@@ -16,6 +16,10 @@ chunks_rs = redis.Redis(host=address, port=15002, db=1)
 files_rs = redis.Redis(host=address, port=15002, db=2)
 
 
+class NSException(Exception):
+    pass
+
+
 @app.route('/')
 def index():
     js = json.dumps({"info": "Hello from flask."})
@@ -34,7 +38,7 @@ def find_server(hash):
 @app.route('/chunk/<hash>')
 def add_chunk(hash):
     server = find_server(hash)
-    chunks_rs.set(hash, server)
+    chunks_rs.rpush(hash, server)
     js = json.dumps({"result": "OK", 'server': server})
 
     return Response(js, status=200, mimetype='application/json')
@@ -42,8 +46,7 @@ def add_chunk(hash):
 
 @app.route('/get_chunk/<hash>')
 def get_chunk(hash):
-    chunks_rs.get(hash)
-    js = json.dumps({"result": "OK"})
+    js = json.dumps({"result": "OK", 'chunk': chunks_rs.lrange(hash, 0, -1)})
     return Response(js, status=200, mimetype='application/json')
 
 
@@ -64,7 +67,10 @@ def get_file(path):
 
     for hash in files_rs.lrange(path, 0, -1):
         chunks.append(hash)
-        servers.append(chunks_rs.get(hash))
+        try:
+            servers.append(random.choice(chunks_rs.lrange(hash, 0, -1)))
+        except IndexError:
+            raise NSException("Chunk not found")
 
     js = json.dumps({"result": "OK", "chunks": chunks, "servers": servers})
     return Response(js, status=200, mimetype='application/json')
