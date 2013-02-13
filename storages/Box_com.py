@@ -39,17 +39,18 @@ class Box_com(object):
     def name(cls):
         return "box.com"
 
-    @classmethod
+    def curl_user(self):
+        return "%s:%s" % (self.user, self.password)
+
     @attempts(n=3, catch=sh.ErrorReturnCode)
-    def store_chunk(cls, chunk_file, hash):
+    def store_chunk(self, chunk_file, hash):
         sh.curl(URL + hash,
-            "--user", file(settings.datadir + 'box.net.secrets').read().strip(),
+            "--user", self.curl_user(),
             "--upload-file", chunk_file)
         sh.rm('-f', chunk_file)
 
-    @classmethod
     @attempts(n=3, catch=sh.ErrorReturnCode)
-    def get_chunk(cls, hash):
+    def get_chunk(self, hash):
         reply = sh.curl(URL + hash,
-            "--user", file(settings.datadir + 'box.net.secrets').read().strip()).stdout
+            "--user", self.curl_user()).stdout
         return reply
