@@ -28,8 +28,8 @@ def index():
 
 def find_server(hash):
     #TODO:
-    old = chunks_rs.get(hash)
-    if old == None:
+    old = chunks_rs.lrange(hash, 0, -1)
+    if not old:
         return random.choice(storages.keys())
     else:
         return old
