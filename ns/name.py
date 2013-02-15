@@ -97,6 +97,7 @@ def get_file(path):
 
 @app.route('/ls/<path:path>')
 def ls(path):
+    path = "/" + path
     files = files_rs.lrange(path, 0, -1)
     if files:
         js = json.dumps({"result": "OK", "files": files})
