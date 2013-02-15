@@ -61,6 +61,13 @@ def get_chunks_for_file(path):
         return zip(js['chunks'], js['servers'])
 
 
+def get_files_in_dir(path):
+    url = "http://%s:15001/ls/%s" % (address, path)
+    js = json.loads(urllib2.urlopen(url).read())
+    if js['result'] == 'OK':
+        return js['files']
+
+
 @tornado.web.stream_body
 class MainHandler(tornado.web.RequestHandler):
     # Need to implement all methods for FUSE filesystem.
@@ -68,6 +75,10 @@ class MainHandler(tornado.web.RequestHandler):
 
     def get(self, path):
         datadir = settings.datadir
+        if path[-1] == '/':
+            for fl in get_files_in_dir(path):
+                self.write("<a href='%s'>%s</a><br />" % (path + fl, fl))
+            return
 
         for chunk, server in get_chunks_for_file(path):
             data = storages[server].get_chunk(chunk)
