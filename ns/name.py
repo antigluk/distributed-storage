@@ -54,7 +54,7 @@ def get_chunk(hash):
 def add_file(path):
     if files_rs.lrange(path, 0, -1):
         js = json.dumps({"result": "ERROR: Entry with this name exists"})
-        return Response(js, status=200, mimetype='application/json')
+        return Response(js, status=404, mimetype='application/json')
         #files_rs.delete(path)
 
     splitted = path.split('/')
@@ -91,11 +91,11 @@ def get_file(path):
 def ls(path):
     files = files_rs.lrange(path, 0, -1)
     if files:
-        js = json.dumps({"result": "OK", files: files})
+        js = json.dumps({"result": "OK", "files": files})
         return Response(js, status=200, mimetype='application/json')
     else:
         js = json.dumps({"result": "ERROR: No such directory"})
-        return Response(js, status=200, mimetype='application/json')
+        return Response(js, status=404, mimetype='application/json')
 
 if __name__ == '__main__':
     app.run(debug=True, host=address, port=15003)
