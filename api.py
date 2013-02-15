@@ -88,7 +88,7 @@ class MainHandler(tornado.web.RequestHandler):
 
     def read_chunks(self, chunk=''):
         self.read_bytes += len(chunk)
-        chunk_length = min(128 * 1024,  # 128kB in chunk
+        chunk_length = min(settings.chunk_size,
             self.request.content_length - self.read_bytes)
 
         if chunk:
@@ -96,6 +96,7 @@ class MainHandler(tornado.web.RequestHandler):
             sh.mkdir('-p', sh.dirname(TMP).strip())
             with file(TMP, "wb") as f:
                 f.write(chunk)
+                f.flush(chunk)
 
             hash = sha.sha(chunk).hexdigest()
             self.chunks.append(hash)
