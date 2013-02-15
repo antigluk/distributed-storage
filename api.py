@@ -47,11 +47,11 @@ def register_file(path, hashes):
     datadir = settings.datadir
     if not js.get('result') == 'OK':
         with file(os.path.join(datadir, 'register_file.log'), 'a+') as f:
-            f.write("Failed file save %s" % path)
+            f.write("Failed file save %s. Response: %s\n" % (path, json.dumps(js)))
         return
 
     with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
-        f.write("File saved %s" % path)
+        f.write("File saved %s\n" % path)
 
 
 def get_chunks_for_file(path):
@@ -78,6 +78,7 @@ class MainHandler(tornado.web.RequestHandler):
         if path[-1] == '/':
             for fl in get_files_in_dir(path):
                 self.write("<a href='%s'>%s</a><br />" % (path + fl, fl))
+            self.finish()
             return
 
         for chunk, server in get_chunks_for_file(path):
