@@ -52,6 +52,8 @@ def get_chunk(hash):
 
 @app.route('/file/<path:path>', methods=['POST'])
 def add_file(path):
+    path = "/" + path
+
     if files_rs.lrange(path, 0, -1):
         js = json.dumps({"result": "ERROR: Entry with this name exists"})
         return Response(js, status=404, mimetype='application/json')
@@ -77,6 +79,8 @@ def add_file(path):
 
 @app.route('/get_file/<path:path>')
 def get_file(path):
+    path = "/" + path
+
     chunks = []
     servers = []
 
