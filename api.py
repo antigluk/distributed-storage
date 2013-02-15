@@ -70,12 +70,13 @@ class MainHandler(tornado.web.RequestHandler):
         datadir = settings.datadir
 
         for chunk, server in get_chunks_for_file(path):
-            self.write(storages[server].get_chunk(chunk))
+            data = storages[server].get_chunk(chunk)
+            self.write(data)
             self.flush()
 
             with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
-                f.write("Chunk %s received from %s\n" %
-                    (chunk, server.strip(), ))
+                f.write("Chunk %s received from %s (size %d)\n" %
+                    (chunk, server.strip(), len(data)))
 
         self.finish()
 
