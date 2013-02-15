@@ -23,8 +23,8 @@ def process_chunk(path, num, chunk_file, hash):
 
     if not js.get('result') == 'OK':
         with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
-            f.write("Failed store chunk %s for file %s (%d) with hash %s\n" %
-                (chunk_file, path, num, hash))
+            f.write("Failed store chunk %s for file %s (%d) with hash %s. Response: %s\n" %
+                (chunk_file, path, num, hash, json.dumps(js)))
         return
 
     #All ok
@@ -50,7 +50,7 @@ def register_file(path, hashes):
             f.write("Failed file save %s. Response: %s\n" % (path, json.dumps(js)))
         return
 
-    with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
+    with file(os.path.join(datadir, 'register_file.log'), 'a+') as f:
         f.write("File saved %s\n" % path)
 
 
