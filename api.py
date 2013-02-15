@@ -71,6 +71,7 @@ class MainHandler(tornado.web.RequestHandler):
 
         for chunk, server in get_chunks_for_file(path):
             self.write(storages[server].get_chunk(chunk))
+            self.flush()
 
             with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
                 f.write("Chunk %s received from %s\n" %
@@ -96,7 +97,6 @@ class MainHandler(tornado.web.RequestHandler):
             sh.mkdir('-p', sh.dirname(TMP).strip())
             with file(TMP, "wb") as f:
                 f.write(chunk)
-                f.flush()
 
             hash = sha.sha(chunk).hexdigest()
             self.chunks.append(hash)
