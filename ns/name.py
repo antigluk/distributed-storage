@@ -60,7 +60,7 @@ def add_file(path):
     splitted = path.split('/')
     for i, folder_name in enumerate(splitted[:-1]):
         folder = '/'.join(splitted[0:i + 1])
-        subitem = folder = '/'.join(splitted[0:i + 2])
+        subitem = '/'.join(splitted[0:i + 2])
         files_rs.rpush(folder, subitem)
 
     for item in pickle.loads(request.data):
