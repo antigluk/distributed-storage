@@ -61,7 +61,7 @@ def add_file(path):
     for i, folder_name in enumerate(splitted[:-1]):
         folder = '/'.join(splitted[0:i + 1])
         subitem = '/'.join(splitted[0:i + 2])
-        if subitem not in files_rs.lrange(path, 0, -1):
+        if subitem not in files_rs.lrange(folder + "/", 0, -1):
             files_rs.rpush(folder + "/", subitem)
 
     for item in pickle.loads(request.data):
