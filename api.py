@@ -96,7 +96,7 @@ class MainHandler(tornado.web.RequestHandler):
             sh.mkdir('-p', sh.dirname(TMP).strip())
             with file(TMP, "wb") as f:
                 f.write(chunk)
-                f.flush(chunk)
+                f.flush()
 
             hash = sha.sha(chunk).hexdigest()
             self.chunks.append(hash)
