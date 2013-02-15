@@ -64,6 +64,8 @@ def get_chunks_for_file(path):
 def get_files_in_dir(path):
     url = "http://%s:15001/ls/%s" % (address, path)
     js = json.loads(urllib2.urlopen(url).read())
+    with file(os.path.join(settings.datadir, 'app.log'), 'a+') as f:
+        f.write("ls %s. :%s" % (path, json.dumps(js)))
     if js['result'] == 'OK':
         return js['files']
 
