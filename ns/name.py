@@ -32,7 +32,7 @@ def find_server(hash):
     if not old:
         return random.choice(storages.keys())
     else:
-        return old
+        return old[0]
 
 
 @app.route('/chunk/<hash>')

@@ -25,9 +25,11 @@ class Storage(type):
 def load_storages(file_name):
     conf = ConfigParser()
     if not conf.read(file_name):
+        print "No config"
         return
     try:
         storage_sections = conf.get("storages", "list").split(',')
+        print storage_sections
         for storage_name in storage_sections:
             stor = storage_classes[conf.get(storage_name.strip(), "type")]()  # Storage class
             stor.identifer = storage_name

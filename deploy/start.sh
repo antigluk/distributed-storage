@@ -17,17 +17,17 @@ chmod +x ${DATA_DIR}redis/bin/redis-server
 cd ${REPO_DIR}
 ${DATA_DIR}bin/gunicorn -w 4 -b $INTERNAL_IP:15001 app.ns.name:app --pid=/tmp/gunicorn-ns.pid \
     --daemon --access-logfile=${DATA_DIR}gunicorn_access.log \
-    --error-logfile=${DATA_DIR}gunicorn_error.log
+    --error-logfile=${DATA_DIR}gunicorn_error.log >> ${DATA_DIR}gunicorn.log
 
 
 # ================= Front-end ====================
 
 chmod +x ${REPO_DIR}app/application
 
-nohup ${DATA_DIR}bin/python ${REPO_DIR}app/application > ${DATA_DIR}/tornado.log 2>&1 &
+nohup ${DATA_DIR}bin/python ${REPO_DIR}app/application >> ${DATA_DIR}/tornado.log 2>&1 &
 
 
 # ================= Celery worker ====================
 
 cd ${REPO_DIR}app
-nohup ${DATA_DIR}bin/celery worker -A api > ${DATA_DIR}/celery_ns_worker.log 2>&1 &
+nohup ${DATA_DIR}bin/celery worker -A api >> ${DATA_DIR}/celery_ns_worker.log 2>&1 &
