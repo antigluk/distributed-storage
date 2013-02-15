@@ -77,9 +77,9 @@ class MainHandler(tornado.web.RequestHandler):
 
     def get(self, path):
         datadir = settings.datadir
-        if path[-1] == '/':
+        if len(path) == 0 or path[-1] == '/':
             for fl in get_files_in_dir(path):
-                self.write("<a href='/data/%s'>%s</a><br />" % (fl, fl))
+                self.write("<a href='/data%s'>%s</a><br />" % (fl, fl))
             self.finish()
             return
 
