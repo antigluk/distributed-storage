@@ -52,7 +52,17 @@ def get_chunk(hash):
 
 @app.route('/file/<path:path>', methods=['POST'])
 def add_file(path):
-    files_rs.delete(path)
+    if files_rs.lrange(path, 0, -1):
+        js = json.dumps({"result": "Entry with this name exists"})
+        return Response(js, status=200, mimetype='application/json')
+        #files_rs.delete(path)
+
+    splitted = path.split('/')
+    for i, folder_name in enumerate(splitted[:-1]):
+        folder = '/'.join(splitted[0:i + 1])
+        subitem = folder = '/'.join(splitted[0:i + 2])
+        files_rs.rpush(folder, subitem)
+
     for item in pickle.loads(request.data):
         files_rs.rpush(path, item)
 
