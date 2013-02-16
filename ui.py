@@ -21,14 +21,16 @@ class StatsUIHandler(tornado.web.RequestHandler):
                            "chunks_count": chunk_num,  # storage.chunks_count(),
                            })
 
-        size, used, count = nslib.full_info()
+        size, used, count, fs_items = nslib.full_info()
         full_info = {"size": float(size) / 1024 / 1024,
                      "used": float(used) / 1024 / 1024,
                      "count": float(count),
                      "free": float(size - used) / 1024 / 1024,
+                     "fs_items": fs_items,
                      }
+
         self.write(loader.load("stats.html").generate(storages=s_list, \
-                full=full_info))
+                full_info=full_info))
         return
 
 

@@ -160,4 +160,5 @@ def full_info():
         used_p, count_p = used_size_on_storage(storage)
         used += used_p
         count += count_p
-    return size, used, count
+    fs_items = len(files_rs.keys())
+    return size, used, count, fs_items
