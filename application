@@ -2,11 +2,15 @@
 import tornado.web
 import tornado.ioloop
 from api import MainHandler
+from ui import UIHandler
 
 import settings
 
 application = tornado.web.Application([
     (r"/data/(.*)", MainHandler),
+    (r"/ui/fs/", UIHandler),
+    (r'/ui/fs/(.*)', tornado.web.StaticFileHandler, {'path': settings.staticdir}),
+    (r"/", tornado.web.RedirectHandler, {"url":"/ui/", "permanent":False}),
 ])
 
 if __name__ == "__main__":
