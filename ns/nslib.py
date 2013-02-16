@@ -174,8 +174,7 @@ def scan_stats(cached=True):
     if cached and os.path.exists(TMP_STATS):
         stats = open(TMP_STATS).read()
         if stats:
-            s_list, info = pickle.loads(stats)
-            return
+            return pickle.loads(stats)
 
     s_list = []
     for storage in storages.values():
