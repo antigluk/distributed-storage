@@ -13,8 +13,8 @@ class StatsUIHandler(tornado.web.RequestHandler):
         loader = tornado.template.Loader(settings.staticdir)
         s_list = []
         for storage in storages.values():
-            s_list.append({"name": storage.name(),
-                           "size": float(storage.allow_space) / 1024 / 1024 / 1024,
+            s_list.append({"name": storage.identifer,
+                           "size": float(storage.allow_space) / 1024,
                            "free": 100,  # storage.free(),
                            "chunks_count": 5,  # storage.chunks_count(),
                            })
