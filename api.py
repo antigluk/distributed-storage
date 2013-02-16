@@ -1,16 +1,14 @@
 import tornado.web
 
 import os
-import urllib2
 import sha
 import sh
-import json
-import cPickle as pickle
 
 from celery import Celery
 
 from storages import storages
 import settings
+from ns import nslib
 
 address = settings.internal_ip
 celery = Celery('tasks', broker='redis://%s:15002/0' % address)
@@ -18,56 +16,42 @@ celery = Celery('tasks', broker='redis://%s:15002/0' % address)
 
 @celery.task
 def process_chunk(path, num, chunk_file, hash):
-    js = json.loads(urllib2.urlopen("http://%s:15001/chunk/%s" % (address, hash)).read())
     datadir = settings.datadir
 
-    if not js.get('result') == 'OK':
+    chunk_size = os.stat(chunk_file).st_size
+
+    try:
+        storage_name = nslib.find_server(hash)
+        nslib.set_chunk_size(hash, chunk_size)
+    except nslib.NSLibException, e:
         with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
-            f.write("Failed store chunk %s for file %s (%d) with hash %s. Response: %s\n" %
-                (chunk_file, path, num, hash, json.dumps(js)))
+            f.write("Failed store chunk %s for file %s (%d) with hash %s. Message: %s\n" %
+                (chunk_file, path, num, hash, e.message))
         return
 
-    #All ok
-    storage = storages[js.get('server').strip()]
+    storage = storages[storage_name]
     storage.store_chunk(chunk_file, hash)
 
+    nslib.chunk_ready_on_storage(hash, storage_name)
+
     with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
-            f.write("Chunk saved %s in %s for file %s (%d) with hash %s\n" %
-                (chunk_file, js.get('server').strip(), path, num, hash))
+        f.write("Chunk saved %s in %s for file %s (%d) with hash %s\n" %
+            (chunk_file, storage_name, path, num, hash))
 
 
 @celery.task
 def register_file(path, hashes):
-    url = "http://%s:15001/file/%s" % (address, path)
-    # js = json.loads(urllib2.urlopen().read())
-
-    data = pickle.dumps(hashes)
-    request = urllib2.Request(url, data, headers={'Content-type': 'application/octet-stream'})
-    js = json.loads(urllib2.urlopen(request).read())
     datadir = settings.datadir
-    if not js.get('result') == 'OK':
-        with file(os.path.join(datadir, 'register_file.log'), 'a+') as f:
-            f.write("Failed file save %s. Response: %s\n" % (path, json.dumps(js)))
+
+    try:
+        nslib.add_file(path, hashes)
+    except nslib.FSError, e:
+        with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
+            f.write("Failed file save %s. Exception: %s\n" % (path, e.message))
         return
 
-    with file(os.path.join(datadir, 'register_file.log'), 'a+') as f:
+    with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
         f.write("File saved %s\n" % path)
-
-
-def get_chunks_for_file(path):
-    url = "http://%s:15001/get_file/%s" % (address, path)
-    js = json.loads(urllib2.urlopen(url).read())
-    if js['result'] == 'OK':
-        return zip(js['chunks'], js['servers'])
-
-
-def get_files_in_dir(path):
-    url = "http://%s:15001/ls/%s" % (address, path)
-    js = json.loads(urllib2.urlopen(url).read())
-    with file(os.path.join(settings.datadir, 'app.log'), 'a+') as f:
-        f.write("ls %s. :%s" % (path, json.dumps(js)))
-    if js['result'] == 'OK':
-        return js['files']
 
 
 @tornado.web.stream_body
@@ -76,10 +60,12 @@ class MainHandler(tornado.web.RequestHandler):
     # https://github.com/terencehonles/fusepy/blob/master/examples/sftp.py
 
     def get(self, path):
+        path = "/" + path
         datadir = settings.datadir
-        if len(path) == 0 or path[-1] == '/':
-            files = get_files_in_dir(path)
-            if not files:
+        if path[-1] == '/':
+            try:
+                files = nslib.ls(path)
+            except nslib.FSError:
                 raise tornado.web.HTTPError(404, "No such file or directory")
 
             for fl in files:
@@ -87,8 +73,9 @@ class MainHandler(tornado.web.RequestHandler):
             self.finish()
             return
 
-        chunks = get_chunks_for_file(path)
-        if not chunks:
+        try:
+            chunks = zip(*nslib.get_file_chunks(path))
+        except nslib.FSError:
             raise tornado.web.HTTPError(404, "No such file or directory")
         for chunk, server in chunks:
             data = storages[server].get_chunk(chunk)
@@ -102,6 +89,7 @@ class MainHandler(tornado.web.RequestHandler):
         self.finish()
 
     def put(self, path):
+        path = "/" + path
         self.read_bytes = 0
         self.chunk_num = 0
         self.path = path
@@ -115,7 +103,7 @@ class MainHandler(tornado.web.RequestHandler):
             self.request.content_length - self.read_bytes)
 
         if chunk:
-            TMP = os.path.join(settings.tmpdir, "cache", "%s.%d.chunk" % (self.path, self.chunk_num))
+            TMP = os.path.join(settings.tmpdir, "cache", "%s.%d.chunk" % (self.path[1:], self.chunk_num))
             sh.mkdir('-p', sh.dirname(TMP).strip())
             with file(TMP, "wb") as f:
                 f.write(chunk)
