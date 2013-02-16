@@ -1,0 +1,5 @@
+Flask>=0.9
+simplejson
+gunicorn
+sh
+celery-with-redis

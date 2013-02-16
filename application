@@ -1,0 +1,15 @@
+#!/usr/bin/python
+import tornado.web
+import tornado.ioloop
+from api import MainHandler
+
+import settings
+
+application = tornado.web.Application([
+    (r"/data/(.*)", MainHandler),
+])
+
+if __name__ == "__main__":
+    address = settings.internal_ip
+    application.listen(8080, address=address)
+    tornado.ioloop.IOLoop.instance().start()
