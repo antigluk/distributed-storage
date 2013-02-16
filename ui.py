@@ -13,10 +13,11 @@ class StatsUIHandler(tornado.web.RequestHandler):
         loader = tornado.template.Loader(settings.staticdir)
         s_list = []
         for storage in storages.values():
+            used, chunk_num = nslib.used_size_on_storage(storage.identifer)
             s_list.append({"name": storage.identifer,
-                           "size": float(storage.allow_space) / 1024,
-                           "free": 100,  # storage.free(),
-                           "chunks_count": 5,  # storage.chunks_count(),
+                           "size": "%.2f" % (float(storage.allow_space) / 1024),
+                           "free": "%.2f MB" % (float(used) / 1024 / 1024),
+                           "chunks_count": chunk_num,  # storage.chunks_count(),
                            })
 
         self.write(loader.load("stats.html").generate(storages=s_list))

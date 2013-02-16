@@ -139,3 +139,14 @@ def find_server(hash):
         return random.choice(storages.keys())
     else:
         return old[0]
+
+
+def used_size_on_storage(storage):
+    ident = storage.identifer
+    used = 0L
+    count = 0L
+    for chunk in chunks_rs.keys():
+        if ident in chunks_rs.lrange(chunk, 0, -1):
+            count += 1
+            used += json.loads(meta_rs.get(chunk))["size"]
+    return used, count
