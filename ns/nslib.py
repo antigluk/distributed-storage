@@ -172,7 +172,7 @@ def scan_stats(cached=True):
     #Run this by cron, with cached=False
     TMP_STATS = os.path.join(settings.tmpdir, "fs_stats.dat")
     if cached and os.path.exists(TMP_STATS):
-        stats = file(TMP_STATS).read()
+        stats = open(TMP_STATS).read()
         if stats:
             s_list, info = pickle.loads(stats)
             return
@@ -194,5 +194,5 @@ def scan_stats(cached=True):
             "free": "%.2f" % (float(size - used) / 1024 / 1024),
             "fs_items": fs_items,
            }
-    pickle.dumps((s_list, info,), file(TMP_STATS, "w"))
+    pickle.dumps((s_list, info,), open(TMP_STATS, "w"))
     return s_list, info
