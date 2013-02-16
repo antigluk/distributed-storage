@@ -168,7 +168,7 @@ def full_info():
     return size, used, count, fs_items
 
 
-def scan_stats(cached=True):
+def scan_stats(cached=False):
     #Run this by cron, with cached=False
     TMP_STATS = os.path.join(settings.tmpdir, "fs_stats.dat")
     if cached and os.path.exists(TMP_STATS):
