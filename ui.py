@@ -24,7 +24,7 @@ class StatsUIHandler(tornado.web.RequestHandler):
         size, used, count, fs_items = nslib.full_info()
         full_info = {"size": "%.2f" % (float(size) / 1024 / 1024),
                      "used": "%.2f" % (float(used) / 1024 / 1024),
-                     "count": float(count),
+                     "count": count,
                      "free": "%.2f" % (float(size - used) / 1024 / 1024),
                      "fs_items": fs_items,
                      }
