@@ -12,12 +12,12 @@ chmod +x ${DATA_DIR}redis/bin/redis-server
 [ -f ${RUN_DIR}redis.pid ] || ${DATA_DIR}redis/bin/redis-server ${DATA_DIR}redis/bin/redis.conf
 
 
-# ================= NAME SERVER ====================
+# # ================= NAME SERVER ====================
 
-cd ${REPO_DIR}
-${DATA_DIR}bin/gunicorn -w 4 -b $INTERNAL_IP:15001 app.ns.name:app --pid=/tmp/gunicorn-ns.pid \
-    --daemon --access-logfile=${DATA_DIR}gunicorn_access.log \
-    --error-logfile=${DATA_DIR}gunicorn_error.log >> ${DATA_DIR}gunicorn.log
+# cd ${REPO_DIR}
+# ${DATA_DIR}bin/gunicorn -w 4 -b $INTERNAL_IP:15001 app.ns.name:app --pid=/tmp/gunicorn-ns.pid \
+#     --daemon --access-logfile=${DATA_DIR}gunicorn_access.log \
+#     --error-logfile=${DATA_DIR}gunicorn_error.log >> ${DATA_DIR}gunicorn.log
 
 
 # ================= Front-end ====================

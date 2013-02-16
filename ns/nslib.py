@@ -5,6 +5,7 @@ import random
 import redis
 
 from .. import settings
+from ..storages import storages
 
 address = settings.internal_ip
 chunks_rs = redis.Redis(host=address, port=15002, db=1)
@@ -122,3 +123,15 @@ def ls(path):
         raise FSError("Not exists or empty directory")
 
     return files
+
+
+def find_server(hash):
+    """
+    Returns server to place new chunk
+    """
+    #TODO:
+    old = chunk_places(hash)
+    if not old:
+        return random.choice(storages.keys())
+    else:
+        return old[0]
