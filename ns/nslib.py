@@ -156,7 +156,7 @@ def full_info():
     size = 0L
     count = 0L
     for storage in storages.keys():
-        size += storages[storage].allow_space
+        size += int(storages[storage].allow_space) * 1024 * 1024L
         used_p, count_p = used_size_on_storage(storage)
         used += used_p
         count += count_p
