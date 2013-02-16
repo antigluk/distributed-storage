@@ -2,14 +2,20 @@
 import tornado.web
 import tornado.ioloop
 from api import MainHandler
-from ui import UIHandler
+from ui import FSUIHandler, StatsUIHandler
 
 import settings
 
 application = tornado.web.Application([
     (r"/data/(.*)", MainHandler),
-    (r"/ui/fs/", UIHandler),
+    (r"/ui/", tornado.web.RedirectHandler, {"url":"/ui/fs/", "permanent":False}),
+
+    (r"/ui/fs/", FSUIHandler),
     (r'/ui/fs/(.*)', tornado.web.StaticFileHandler, {'path': settings.staticdir}),
+
+    (r"/ui/stats/", StatsUIHandler),
+    (r'/ui/stats/(.*)', tornado.web.StaticFileHandler, {'path': settings.staticdir}),
+
     (r"/", tornado.web.RedirectHandler, {"url":"/ui/", "permanent":False}),
 ])
 

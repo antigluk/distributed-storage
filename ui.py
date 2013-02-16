@@ -8,7 +8,15 @@ import settings
 from ns import nslib
 
 
-class UIHandler(tornado.web.RequestHandler):
+class StatsUIHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.write("UI")
+        loader = tornado.template.Loader(settings.staticdir)
+        self.write(loader.load("stats.html").generate(myvalue="XXX"))
+        return
+
+
+class FSUIHandler(tornado.web.RequestHandler):
     def get(self):
         self.write("UI")
         loader = tornado.template.Loader(settings.staticdir)
