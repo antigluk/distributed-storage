@@ -35,25 +35,19 @@
     </div>
     <div class="container">
       <!-- <div class="row"></div> -->
+      {% for storage in storages %}
+
       <div class="media well pull-left">
         <div class="media-body pull-left">
-          <h4 class="media-heading">box.net.1</h4>
-          <p>All: 45GB</p>
-          <div>Free: 43.2GB</div>
-          <div>Chunk count: 120</div>
+          <h4 class="media-heading"><li>{{ storage.name }}</li></h4>
+          <p>Size: {{ storage.size }} GB</p>
+          <div>Free space: {{ storage.free }} GB</div>
+          <div>Chunk count: {{ storage.chunks_count }}</div>
           <p></p>
         </div>
       </div>
 
-      <div class="media well pull-left">
-        <div class="media-body pull-left">
-          <h4 class="media-heading">box.net.2</h4>
-          <p>All: 45GB</p>
-          <div>Free: 43.2GB</div>
-          <div>Chunk count: 120</div>
-          <p></p>
-        </div>
-      </div>
+      {% end %}
 
       <div class="media well pull-left" style="width:100%;">
         <div class="media-body">
