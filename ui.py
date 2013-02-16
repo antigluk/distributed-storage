@@ -17,7 +17,7 @@ class StatsUIHandler(tornado.web.RequestHandler):
             s_list.append({"name": storage.identifer,
                            "size": "%.2f" % (float(storage.allow_space)),
                            "used": "%.2f" % (float(used) / 1024 / 1024),
-                           "free": "%.2f" % ((float(storage.allow_space - used) / 1024 / 1024)),
+                           "free": "%.2f" % ((float(storage.allow_space) - float(used) / 1024 / 1024)),
                            "chunks_count": chunk_num,  # storage.chunks_count(),
                            })
 
