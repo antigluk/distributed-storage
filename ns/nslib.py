@@ -5,6 +5,8 @@ import random
 
 import redis
 
+import cPickle as pickle
+
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import settings
 from storages import storages
@@ -136,7 +138,9 @@ def find_server(hash):
     #TODO:
     old = chunk_places(hash)
     if not old:
-        return random.choice(storages.keys())
+        s_list, full_info = scan_stats()
+        return sorted(s_list, lambda x: x['chunks_count'])[0]['identifer']
+        # return random.choice(storages.keys())
     else:
         return old[0]
 
@@ -162,3 +166,30 @@ def full_info():
         count += count_p
     fs_items = len(files_rs.keys())
     return size, used, count, fs_items
+
+
+def scan_stats(cached=True):
+    #Run this by cron, with cached=False
+    TMP_STATS = os.path.join(settings.tmpdir, "fs_stats.dat")
+    if cached and os.path.exists(TMP_STATS):
+        s_list, info = pickle.load(TMP_STATS)
+    else:
+        s_list = []
+        for storage in storages.values():
+            used, chunk_num = used_size_on_storage(storage.identifer)
+            s_list.append({"name": storage.identifer,
+                           "size": "%.2f" % (float(storage.allow_space)),
+                           "used": "%.2f" % (float(used) / 1024 / 1024),
+                           "free": "%.2f" % ((float(storage.allow_space) - float(used) / 1024 / 1024)),
+                           "chunks_count": chunk_num,  # storage.chunks_count(),
+                           })
+
+        size, used, count, fs_items = full_info()
+        info = {"size": "%.2f" % (float(size) / 1024 / 1024),
+                "used": "%.2f" % (float(used) / 1024 / 1024),
+                "count": count,
+                "free": "%.2f" % (float(size - used) / 1024 / 1024),
+                "fs_items": fs_items,
+               }
+        pickle.dumps((s_list, info,), file(TMP_STATS, "w"))
+    return s_list, info
