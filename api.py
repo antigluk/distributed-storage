@@ -89,6 +89,7 @@ class MainHandler(tornado.web.RequestHandler):
         self.finish()
 
     def put(self, path):
+        path = "/" + path
         self.read_bytes = 0
         self.chunk_num = 0
         self.path = path
