@@ -60,8 +60,9 @@ class MainHandler(tornado.web.RequestHandler):
     # https://github.com/terencehonles/fusepy/blob/master/examples/sftp.py
 
     def get(self, path):
+        path = "/" + path
         datadir = settings.datadir
-        if len(path) == 0 or path[-1] == '/':
+        if path[-1] == '/':
             try:
                 files = nslib.ls(path)
             except nslib.FSError:
