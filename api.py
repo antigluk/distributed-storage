@@ -103,7 +103,7 @@ class MainHandler(tornado.web.RequestHandler):
             self.request.content_length - self.read_bytes)
 
         if chunk:
-            TMP = os.path.join(settings.tmpdir, "cache", "%s.%d.chunk" % (self.path, self.chunk_num))
+            TMP = os.path.join(settings.tmpdir, "cache", "%s.%d.chunk" % (self.path[1:], self.chunk_num))
             sh.mkdir('-p', sh.dirname(TMP).strip())
             with file(TMP, "wb") as f:
                 f.write(chunk)
