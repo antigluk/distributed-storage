@@ -85,6 +85,8 @@ def add_file(path, chunks):
     """
 
     path_d, name = os.path.split(path)
+    if path_d == "/":
+        path_d = ""
 
     mkdirs(path_d)
 
