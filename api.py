@@ -18,7 +18,12 @@ celery = Celery('tasks', broker='redis://%s:15002/0' % address)
 
 @celery.task
 def process_chunk(path, num, chunk_file, hash):
-    js = json.loads(urllib2.urlopen("http://%s:15001/chunk/%s" % (address, hash)).read())
+    url = "http://%s:15001/chunk/%s" % (address, hash)
+
+    chunk_size = os.stat(chunk_file).st_size
+    data = pickle.dumps({"size": chunk_size})
+    request = urllib2.Request(url, data, headers={'Content-type': 'application/octet-stream'})
+    js = json.loads(urllib2.urlopen(request).read())
     datadir = settings.datadir
 
     if not js.get('result') == 'OK':
@@ -28,8 +33,13 @@ def process_chunk(path, num, chunk_file, hash):
         return
 
     #All ok
-    storage = storages[js.get('server').strip()]
+    storage_name = js.get('server').strip()
+    storage = storages[storage_name]
     storage.store_chunk(chunk_file, hash)
+
+    data = pickle.dumps({"storage": storage_name})
+    request = urllib2.Request(url, data, headers={'Content-type': 'application/octet-stream'})
+    js = json.loads(urllib2.urlopen(request).read())
 
     with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
             f.write("Chunk saved %s in %s for file %s (%d) with hash %s\n" %

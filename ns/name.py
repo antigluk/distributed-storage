@@ -1,23 +1,13 @@
 from flask import Flask, json, Response, request
 
-import redis
-
 import cPickle as pickle
-
-from ..storages import storages
-from .. import settings
-
 import random
 
+import nslib
+from .. import settings
+from ..storages import storages
+
 app = Flask(__name__)
-
-address = settings.internal_ip
-chunks_rs = redis.Redis(host=address, port=15002, db=1)
-files_rs = redis.Redis(host=address, port=15002, db=2)
-
-
-class NSException(Exception):
-    pass
 
 
 @app.route('/')
@@ -27,51 +17,68 @@ def index():
 
 
 def find_server(hash):
+    """
+    Returns server to place new chunk
+    """
     #TODO:
-    old = chunks_rs.lrange(hash, 0, -1)
+    old = nslib.chunk_places(hash)
     if not old:
         return random.choice(storages.keys())
     else:
         return old[0]
 
 
-@app.route('/chunk/<hash>')
+@app.route('/chunk/<hash>', methods=['POST'])
 def add_chunk(hash):
+    """
+    Registers new chunk in db
+    """
+    info = pickle.loads(request.data)  # dict
+
     server = find_server(hash)
-    chunks_rs.rpush(hash, server)
+    # chunks_rs.rpush(hash, server)
+    nslib.set_chunk_size(hash, info['size'])
+
     js = json.dumps({"result": "OK", 'server': server})
 
     return Response(js, status=200, mimetype='application/json')
 
 
+@app.route('/chunk_ready/<hash>', methods=['POST'])
+def chunk_ready(hash):
+    """
+    Marks server as ready with particular chunk
+    """
+    info = pickle.loads(request.data)  # dict
+    nslib.chunk_ready_on_storage(hash, info['storage'])
+
+    js = json.dumps({"result": "OK"})
+    return Response(js, status=200, mimetype='application/json')
+
+
 @app.route('/get_chunk/<hash>')
 def get_chunk(hash):
-    js = json.dumps({"result": "OK", 'chunk': chunks_rs.lrange(hash, 0, -1)})
+    """
+    Returns server where chunk settled
+    """
+    js = json.dumps({"result": "OK", 'chunk': nslib.chunk_places(hash)})
     return Response(js, status=200, mimetype='application/json')
 
 
 @app.route('/file/<path:path>', methods=['POST'])
 def add_file(path):
+    """
+    Add file's chunks to db
+    """
     path = "/" + path
+    chunks = pickle.loads(request.data)
 
-    if files_rs.lrange(path, 0, -1):
-        js = json.dumps({"result": "ERROR: Entry with this name exists"})
+    try:
+        nslib.add_file(path, chunks)
+    except nslib.FSError, e:
+        js = json.dumps({"result": "ERROR %s" % e.message})
+        #FIXME: 404?
         return Response(js, status=404, mimetype='application/json')
-        #files_rs.delete(path)
-
-    splitted = path.split('/')
-    for i, folder_name in enumerate(splitted[:-1]):
-        folder = '/'.join(splitted[0:i + 1])
-        subitem = '/'.join(splitted[0:i + 2])
-        if subitem == path:
-            if subitem not in files_rs.lrange(folder + "/", 0, -1):
-                files_rs.rpush(folder + "/", subitem)
-        else:
-            if subitem + "/" not in files_rs.lrange(folder + "/", 0, -1):
-                files_rs.rpush(folder + "/", subitem + "/")
-
-    for item in pickle.loads(request.data):
-        files_rs.rpush(path, item)
 
     js = json.dumps({"result": "OK"})
     return Response(js, status=200, mimetype='application/json')
@@ -79,17 +86,17 @@ def add_file(path):
 
 @app.route('/get_file/<path:path>')
 def get_file(path):
+    """
+    Returns list of chunks and servers to load file
+    """
     path = "/" + path
 
-    chunks = []
-    servers = []
-
-    for hash in files_rs.lrange(path, 0, -1):
-        chunks.append(hash)
-        try:
-            servers.append(random.choice(chunks_rs.lrange(hash, 0, -1)))
-        except IndexError:
-            raise NSException("Chunk not found")
+    try:
+        chunks, servers = nslib.get_file_chunks(path)
+    except nslib.FSError, e:
+        js = json.dumps({"result": "ERROR %s" % e.message})
+        #FIXME: 404?
+        return Response(js, status=404, mimetype='application/json')
 
     js = json.dumps({"result": "OK", "chunks": chunks, "servers": servers})
     return Response(js, status=200, mimetype='application/json')
@@ -98,14 +105,21 @@ def get_file(path):
 @app.route('/ls/', defaults={'path': ''})
 @app.route('/ls/<path:path>')
 def ls(path):
+    """
+    Lists directory
+    """
     path = "/" + path
-    files = files_rs.lrange(path, 0, -1)
-    if files:
-        js = json.dumps({"result": "OK", "files": files})
-        return Response(js, status=200, mimetype='application/json')
-    else:
-        js = json.dumps({"result": "ERROR: No such directory"})
+
+    try:
+        files = nslib.ls(path)
+    except nslib.FSError, e:
+        js = json.dumps({"result": "ERROR %s" % e.message})
+        #FIXME: 404?
         return Response(js, status=404, mimetype='application/json')
 
+    js = json.dumps({"result": "OK", "files": files})
+    return Response(js, status=200, mimetype='application/json')
+
+
 if __name__ == '__main__':
-    app.run(debug=True, host=address, port=15003)
+    app.run(debug=True, host=settings.internal_ip, port=15003)
