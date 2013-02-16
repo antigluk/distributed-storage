@@ -1,11 +1,13 @@
 import os
+import sys
 import json
 import random
 
 import redis
 
-from .. import settings
-from ..storages import storages
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+import settings
+from storages import storages
 
 address = settings.internal_ip
 chunks_rs = redis.Redis(host=address, port=15002, db=1)
