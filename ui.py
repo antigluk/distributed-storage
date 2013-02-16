@@ -12,7 +12,7 @@ class StatsUIHandler(tornado.web.RequestHandler):
     def get(self):
         loader = tornado.template.Loader(settings.staticdir)
         s_list = []
-        for storage in storages:
+        for storage in storages.values():
             s_list.append({"name": storage.name(),
                            "size": storage.allow_space / 1024. / 1024 / 1024,
                            "free": 100,  # storage.free(),
