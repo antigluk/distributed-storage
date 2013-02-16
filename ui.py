@@ -17,11 +17,18 @@ class StatsUIHandler(tornado.web.RequestHandler):
             s_list.append({"name": storage.identifer,
                            "size": "%.2f" % (float(storage.allow_space)),
                            "used": "%.2f" % (float(used) / 1024 / 1024),
-                           "free": "%.2f" % ((float(storage.allow_space) - float(used) / 1024 / 1024)),
+                           "free": "%.2f" % ((float(storage.allow_space - used) / 1024 / 1024)),
                            "chunks_count": chunk_num,  # storage.chunks_count(),
                            })
 
-        self.write(loader.load("stats.html").generate(storages=s_list))
+        size, used, count = nslib.full_info()
+        full_info = {"size": float(size) / 1024 / 1024,
+                     "used": float(used) / 1024 / 1024,
+                     "count": float(count),
+                     "free": float(size - used) / 1024 / 1024,
+                     }
+        self.write(loader.load("stats.html").generate(storages=s_list, \
+                full=full_info))
         return
 
 

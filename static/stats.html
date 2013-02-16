@@ -53,6 +53,12 @@
       <div class="media well pull-left" style="width:100%;">
         <div class="media-body">
           <h4 class="media-heading">Overall</h4>
+
+          <p>Size: {{ full_info['size'] }} MB</p>
+          <div>Used: {{ full_info['used'] }} MB</div>
+          <div>Free: {{ full_info['free'] }} MB</div>
+          <div>Chunk count: {{ full_info['count'] }}</div>
+
           <p>Entries in file system: 124</p>
           <div>
             <br> 

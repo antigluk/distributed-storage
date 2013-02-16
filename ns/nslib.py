@@ -149,3 +149,15 @@ def used_size_on_storage(storage):
             count += 1
             used += json.loads(meta_rs.get(chunk))["size"]
     return used, count
+
+
+def full_info():
+    used = 0L
+    size = 0L
+    count = 0L
+    for storage in storages.keys():
+        size += storages[storage].allow_space
+        used_p, count_p = used_size_on_storage(storage)
+        used += used_p
+        count += count_p
+    return size, used, count
