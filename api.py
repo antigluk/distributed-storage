@@ -61,6 +61,7 @@ class MainHandler(tornado.web.RequestHandler):
 
     # ======= GET ============
 
+    @tornado.web.asynchronous
     def get(self, path):
         path = "/" + path
         if path[-1] == '/':
@@ -82,6 +83,7 @@ class MainHandler(tornado.web.RequestHandler):
         self.generator = self.write_generator(chunks)
         tornado.ioloop.IOLoop.instance().add_callback(self.write_callback)
 
+    @tornado.web.asynchronous
     def write_callback(self):
         try:
             data = self.generator.next()
