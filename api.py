@@ -59,9 +59,11 @@ class MainHandler(tornado.web.RequestHandler):
     # Need to implement all methods for FUSE filesystem.
     # https://github.com/terencehonles/fusepy/blob/master/examples/sftp.py
 
+    # ======= GET ============
+
+    @tornado.web.asynchronous
     def get(self, path):
         path = "/" + path
-        datadir = settings.datadir
         if path[-1] == '/':
             try:
                 files = nslib.ls(path)
@@ -77,16 +79,32 @@ class MainHandler(tornado.web.RequestHandler):
             chunks = zip(*nslib.get_file_chunks(path))
         except nslib.FSError:
             raise tornado.web.HTTPError(404, "No such file or directory")
-        for chunk, server in chunks:
-            data = storages[server].get_chunk(chunk)
+
+        self.generator = self.write_generator(chunks)
+        tornado.ioloop.IOLoop.instance().add_callback(self.write_callback)
+
+    @tornado.web.asynchronous
+    def write_callback(self):
+        try:
+            data = self.generator.next()
             self.write(data)
             self.flush()
+            tornado.ioloop.IOLoop.instance().add_callback(self.write_callback)
+        except StopIteration:
+            self.finish()
+
+    def write_generator(self, chunks):
+        datadir = settings.datadir
+
+        for chunk, server in chunks:
+            data = storages[server].get_chunk(chunk)
+            yield data
 
             with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
                 f.write("Chunk %s received from %s (size %d)\n" %
                     (chunk, server.strip(), len(data)))
 
-        self.finish()
+    # ======= POST ============
 
     def put(self, path):
         path = "/" + path
@@ -121,6 +139,6 @@ class MainHandler(tornado.web.RequestHandler):
             self.uploaded()
 
     def uploaded(self):
-        self.write('Uploaded %d bytes' % self.read_bytes)
+        self.write('Uploaded %d bytes\n' % self.read_bytes)
         register_file.delay(self.path, self.chunks)
         self.finish()
