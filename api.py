@@ -74,7 +74,7 @@ class MainHandler(tornado.web.RequestHandler):
             return
 
         try:
-            chunks = nslib.get_file_chunks(path)
+            chunks = zip(*nslib.get_file_chunks(path))
         except nslib.FSError:
             raise tornado.web.HTTPError(404, "No such file or directory")
         for chunk, server in chunks:
