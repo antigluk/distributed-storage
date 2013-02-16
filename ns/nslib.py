@@ -100,7 +100,7 @@ def get_file_chunks(path):
     """
     Returns list of chunks for file
     """
-    if exists(path):
+    if not exists(path):
         raise FSError("Entry with this name exists")
 
     chunks = []
