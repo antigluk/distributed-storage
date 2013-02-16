@@ -87,7 +87,10 @@ class MainHandler(tornado.web.RequestHandler):
             self.finish()
             return
 
-        for chunk, server in get_chunks_for_file(path):
+        chunks = get_chunks_for_file(path)
+        if not chunks:
+            raise tornado.web.HTTPError(404, "No such file or directory")
+        for chunk, server in chunks:
             data = storages[server].get_chunk(chunk)
             self.write(data)
             self.flush()
