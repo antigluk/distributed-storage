@@ -139,7 +139,7 @@ def find_server(hash):
     old = chunk_places(hash)
     if not old:
         s_list, full_info = scan_stats()
-        return sorted(s_list, key=lambda x: x['chunks_count'])[0]['identifer']
+        return sorted(s_list, key=lambda x: x['chunks_count'])[0]['name']
         # return random.choice(storages.keys())
     else:
         return old[0]
