@@ -16,7 +16,8 @@ class StatsUIHandler(tornado.web.RequestHandler):
             used, chunk_num = nslib.used_size_on_storage(storage.identifer)
             s_list.append({"name": storage.identifer,
                            "size": "%.2f" % (float(storage.allow_space) / 1024),
-                           "free": "%.2f MB" % (float(used) / 1024 / 1024),
+                           "used": "%.2f" % (float(used) / 1024 / 1024),
+                           "free": "%.2f" % (storage.allow_space - float(used) / 1024 / 1024),
                            "chunks_count": chunk_num,  # storage.chunks_count(),
                            })
 
