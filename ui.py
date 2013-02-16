@@ -35,7 +35,7 @@ class StatsUIHandler(tornado.web.RequestHandler):
 
 
 class FSUIHandler(tornado.web.RequestHandler):
-    def get(self):
+    def get(self, path):
         loader = tornado.template.Loader(settings.staticdir)
         self.write(loader.load("fs.html").generate(myvalue="XXX"))
         return
