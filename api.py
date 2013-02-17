@@ -186,6 +186,10 @@ class BodyStreamHandler(tornado.httpserver.HTTPParseBody):
         with file(TMP, "wb") as f:
             f.write(data)
 
+        with file(os.path.join(settings.datadir, 'process_chunk.log'), 'a+') as f:
+            f.write("Received %d\n" %
+                (len(data)))
+
         hash = sha.sha(data).hexdigest()
         self.chunks.append(hash)
         process_chunk.delay(self.path, self.chunk_num, TMP, hash)
