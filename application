@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import tornado.web
 import tornado.ioloop
-from api import MainHandler
+from api import MainHandler, BodyStreamHandler
 from ui import FSUIHandler, StatsUIHandler
 
 import settings
@@ -19,7 +19,12 @@ application = tornado.web.Application([
     (r"/", tornado.web.RedirectHandler, {"url":"/ui/", "permanent":False}),
 ])
 
+
+body_handlers = [
+    (".*", BodyStreamHandler),
+]
+
 if __name__ == "__main__":
     address = settings.internal_ip
-    application.listen(8080, address=address)
+    application.listen(8080, address=address, body_handlers=body_handlers)
     tornado.ioloop.IOLoop.instance().start()
