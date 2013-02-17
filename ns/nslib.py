@@ -194,3 +194,10 @@ def scan_stats(cached=True):
            }
     pickle.dump((s_list, info,), open(TMP_STATS, "w"))
     return s_list, info
+
+
+def fsck():
+    # 1) check all chunks in files exists
+    pass
+    # 2) check all chunks owns by some file (danger! could be during file uploading)
+    pass
