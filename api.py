@@ -33,7 +33,8 @@ def process_chunk(num, chunk_file, hash):
         return
 
     storage = storages[storage_name]
-    storage.store_chunk(chunk_file, hash)
+    if not nslib.is_chunk_on_storage(hash):
+        storage.store_chunk(chunk_file, hash)
 
     nslib.chunk_ready_on_storage(hash, storage_name)
 
