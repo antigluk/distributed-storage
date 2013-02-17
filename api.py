@@ -28,7 +28,7 @@ def process_chunk(num, chunk_file, hash):
         nslib.set_chunk_size(hash, chunk_size)
     except nslib.NSLibException, e:
         with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
-            f.write("Failed store chunk %s for file (%d) with hash %s. Message: %s\n" %
+            f.write("Failed store chunk %s for file (%d). Message: %s\n" %
                 (chunk_file, num, hash, e.message))
         return
 
@@ -38,8 +38,8 @@ def process_chunk(num, chunk_file, hash):
     nslib.chunk_ready_on_storage(hash, storage_name)
 
     with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
-        f.write("Chunk saved %s in %s (%d) with hash %s\n" %
-            (chunk_file, storage_name, num, hash))
+        f.write("Chunk saved %s in %s (%d)\n" %
+            (chunk_file, storage_name, num))
 
 
 @celery.task
@@ -121,38 +121,6 @@ class MainHandler(tornado.web.RequestHandler):
         register_file.delay(self.path, self.chunks)
         self.write('Uploaded %d bytes\n' % self.request.content_length)
         self.finish()
-
-    # def read_chunks(self, chunk=''):
-    #     self.read_bytes += len(chunk)
-
-    #     with file(os.path.join(settings.datadir, 'process_chunk.log'), 'a+') as f:
-    #         f.write("Chunk read len:%d\n" % (len(chunk)))
-
-    #     chunk_length = min(settings.chunk_size,
-    #         self.request.content_length - self.read_bytes)
-
-    #     if chunk:
-    #         TMP = os.path.join(settings.tmpdir, "cache", "%s.%d.chunk" % (self.path[1:], self.chunk_num))
-    #         sh.mkdir('-p', sh.dirname(TMP).strip())
-    #         with file(TMP, "wb") as f:
-    #             f.write(chunk)
-
-    #         hash = sha.sha(chunk).hexdigest()
-    #         self.chunks.append(hash)
-    #         process_chunk.delay(self.path, self.chunk_num, TMP, hash)
-
-    #         self.chunk_num += 1
-
-    #     if chunk_length > 0:
-    #         self.request.connection.stream.read_bytes(
-    #             chunk_length, self.read_chunks)
-    #     else:
-    #         self.uploaded()
-
-    # def uploaded(self):
-    #     self.write('Uploaded %d bytes\n' % self.read_bytes)
-    #     register_file.delay(self.path, self.chunks)
-    #     self.finish()
 
 #https://gist.github.com/joshmarshall/870216
 
