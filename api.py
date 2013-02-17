@@ -18,7 +18,7 @@ celery = Celery('tasks', broker='redis://%s:15002/0' % address)
 
 
 @celery.task
-def process_chunk(path, num, chunk_file, hash):
+def process_chunk(num, chunk_file, hash):
     datadir = settings.datadir
 
     chunk_size = os.stat(chunk_file).st_size
@@ -28,8 +28,8 @@ def process_chunk(path, num, chunk_file, hash):
         nslib.set_chunk_size(hash, chunk_size)
     except nslib.NSLibException, e:
         with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
-            f.write("Failed store chunk %s for file %s (%d) with hash %s. Message: %s\n" %
-                (chunk_file, path, num, hash, e.message))
+            f.write("Failed store chunk %s for file (%d) with hash %s. Message: %s\n" %
+                (chunk_file, num, hash, e.message))
         return
 
     storage = storages[storage_name]
@@ -38,8 +38,8 @@ def process_chunk(path, num, chunk_file, hash):
     nslib.chunk_ready_on_storage(hash, storage_name)
 
     with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
-        f.write("Chunk saved %s in %s for file %s (%d) with hash %s\n" %
-            (chunk_file, storage_name, path, num, hash))
+        f.write("Chunk saved %s in %s (%d) with hash %s\n" %
+            (chunk_file, storage_name, num, hash))
 
 
 @celery.task
@@ -165,6 +165,7 @@ class BodyStreamHandler(tornado.httpserver.HTTPParseBody):
 
         self.read_bytes = 0
         self.chunk_num = 0
+        self.chunks = []
 
         with file(os.path.join(settings.datadir, 'process_chunk.log'), 'a+') as f:
             f.write("Start uploading size: %d\n" %
@@ -181,7 +182,9 @@ class BodyStreamHandler(tornado.httpserver.HTTPParseBody):
     def data_callback(self, data=None):
         self.content_left -= len(data)
 
-        TMP = os.path.join(settings.tmpdir, "cache", "%s.%d.chunk" % (self.path[1:], self.chunk_num))
+        hash = sha.sha(data).hexdigest()
+
+        TMP = os.path.join(settings.tmpdir, "cache", "%s.%d.chunk" % (self.chunk_num, hash))
         sh.mkdir('-p', sh.dirname(TMP).strip())
         with file(TMP, "wb") as f:
             f.write(data)
@@ -190,16 +193,13 @@ class BodyStreamHandler(tornado.httpserver.HTTPParseBody):
             f.write("Received %d\n" %
                 (len(data)))
 
-        hash = sha.sha(data).hexdigest()
         self.chunks.append(hash)
-        process_chunk.delay(self.path, self.chunk_num, TMP, hash)
+        process_chunk.delay(self.chunk_num, TMP, hash)
 
         self.chunk_num += 1
 
         if self.content_left > 0:
             tornado.ioloop.IOLoop.instance().add_callback(self.read_chunk)
         else:
-            self.request.body = self.temporary_fp
-            self.temporary_fp.flush()
-            self.temporary_fp.seek(0)
+            self.request.body = self.chunks
             self.done()
