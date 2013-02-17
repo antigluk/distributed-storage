@@ -33,8 +33,12 @@ def process_chunk(num, chunk_file, hash):
         return
 
     storage = storages[storage_name]
-    if not nslib.is_chunk_on_storage(hash):
+    if not nslib.is_chunk_on_storage(hash, storage_name):
         storage.store_chunk(chunk_file, hash)
+    else:
+        with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
+            f.write("Chunk %s (%d) already on storage %s\n" %
+                (hash, num, storage_name))
 
     nslib.chunk_ready_on_storage(hash, storage_name)
 
