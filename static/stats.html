@@ -9,6 +9,10 @@
     <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
     <link rel="stylesheet" href="https://app.divshot.com/themes/cerulean/bootstrap.min.css">
     <link rel="stylesheet" href="https://app.divshot.com/css/bootstrap-responsive.css"> 
+
+    <style>
+      .media {margin: 8px;}
+    </style>
   </head>
   
   <body>
@@ -19,10 +23,10 @@
           <div class="navbar-content">
             <ul class="nav  pull-right">
               <li class="active">
-                <a href="#">Stats</a> 
+                <a href="/ui/stats/">Stats</a> 
               </li>
               <li>
-                <a href="#">File system</a> 
+                <a href="/ui/fs/">File system</a> 
               </li>
             </ul>
           </div>
@@ -30,36 +34,32 @@
       </div>
     </div>
     <div class="container">
-      <div class="row"></div>
-      <div class="media">
-        <a class="pull-left" href="#"></a>
-        <div class="media-body">
-          <h4 class="media-heading">box.net.1</h4>
-          <p>All: 45GB</p>
-          <div>Free: 43.2GB</div>
-          <div>Chunk count: 120</div>
+      <!-- <div class="row"></div> -->
+      {% for storage in storages %}
+
+      <div class="media well pull-left">
+        <div class="media-body pull-left">
+          <h4 class="media-heading"><li>{{ storage['name'] }}</li></h4>
+          <p>Size: {{ storage['size'] }} MB</p>
+          <div>Used: {{ storage['used'] }} MB</div>
+          <div>Free: {{ storage['free'] }} MB</div>
+          <div>Chunk count: {{ storage['chunks_count'] }}</div>
           <p></p>
         </div>
       </div>
-    </div>
-    <div class="container">
-      <div class="media">
-        <a class="pull-left" href="#"></a>
-        <div class="media-body">
-          <h4 class="media-heading">box.net.2</h4>
-          <p>All: 45GB</p>
-          <div>Free: 43.2GB</div>
-          <div>Chunk count: 120</div>
-          <p></p>
-        </div>
-      </div>
-    </div>
-    <div class="container">
-      <div class="media">
-        <a class="pull-left" href="#"></a>
+
+      {% end %}
+
+      <div class="media well pull-left" style="width:100%;">
         <div class="media-body">
           <h4 class="media-heading">Overall</h4>
-          <p>Entries in file system: 124</p>
+
+          <p>Size: {{ full_info['size'] }} MB</p>
+          <div>Used: {{ full_info['used'] }} MB</div>
+          <div>Free: {{ full_info['free'] }} MB</div>
+          <div>Chunk count: {{ full_info['count'] }}</div>
+
+          <p>Entries in file system: {{ full_info['fs_items'] }}</p>
           <div>
             <br> 
           </div>
