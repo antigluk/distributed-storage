@@ -111,12 +111,21 @@ class MainHandler(tornado.web.RequestHandler):
         self.read_bytes = 0
         self.chunk_num = 0
         self.path = path
+
+        with file(os.path.join(settings.datadir, 'process_chunk.log'), 'a+') as f:
+            f.write("Start uploading %s size: %d\n" %
+                (path, self.request.content_length))
+
         self.request.request_continue()
         self.read_chunks()
         self.chunks = []
 
     def read_chunks(self, chunk=''):
         self.read_bytes += len(chunk)
+
+        with file(os.path.join(settings.datadir, 'process_chunk.log'), 'a+') as f:
+            f.write("Chunk read len:%d\n" % (len(chunk)))
+
         chunk_length = min(settings.chunk_size,
             self.request.content_length - self.read_bytes)
 
