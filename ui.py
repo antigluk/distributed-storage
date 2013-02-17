@@ -8,7 +8,7 @@ from ns import nslib
 class StatsUIHandler(tornado.web.RequestHandler):
     def get(self):
         loader = tornado.template.Loader(settings.staticdir)
-        s_list, full_info = nslib.scan_stats()
+        s_list, full_info = nslib.scan_stats(False)
 
         self.write(loader.load("stats.html").generate(storages=s_list, \
                 full_info=full_info))
