@@ -184,7 +184,7 @@ class BodyStreamHandler(tornado.httpserver.HTTPParseBody):
 
         hash = sha.sha(data).hexdigest()
 
-        TMP = os.path.join(settings.tmpdir, "cache", "%s.%d.chunk" % (self.chunk_num, hash))
+        TMP = os.path.join(settings.tmpdir, "cache", "%s.%s.chunk" % (self.chunk_num, hash))
         sh.mkdir('-p', sh.dirname(TMP).strip())
         with file(TMP, "wb") as f:
             f.write(data)
