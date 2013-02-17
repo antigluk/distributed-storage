@@ -119,7 +119,7 @@ class MainHandler(tornado.web.RequestHandler):
 
         self.chunks = self.request.body
         register_file.delay(self.path, self.chunks)
-        self.write('Uploaded %d bytes\n' % self.read_bytes)
+        self.write('Uploaded %d bytes\n' % self.request.content_length)
         self.finish()
 
     # def read_chunks(self, chunk=''):
