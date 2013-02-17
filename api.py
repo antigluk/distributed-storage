@@ -202,4 +202,5 @@ class BodyStreamHandler(tornado.httpserver.HTTPParseBody):
             tornado.ioloop.IOLoop.instance().add_callback(self.read_chunk)
         else:
             self.request.body = self.chunks
+            self.request.content_length = self.content_length
             self.done()
