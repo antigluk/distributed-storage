@@ -31,5 +31,5 @@ nohup ${DATA_DIR}bin/python ${REPO_DIR}app/application >> ${DATA_DIR}/tornado.lo
 
 cd ${REPO_DIR}app
 for x in `seq 1 15`; do
-    nohup ${DATA_DIR}bin/celery worker -A api >> ${DATA_DIR}/celery_ns_worker$x.log 2>&1 &;
+    nohup ${DATA_DIR}bin/celery worker -A api >> ${DATA_DIR}/celery_ns_worker$x.log 2>&1 &
 done
