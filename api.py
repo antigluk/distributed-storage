@@ -41,6 +41,7 @@ def process_chunk(num, chunk_file, hash):
         with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
             f.write("Chunk %s (%d) already on storage %s\n" %
                 (hash, num, storage_name))
+        sh.rm("-f", chunk_file)
 
     nslib.chunk_ready_on_storage(hash, storage_name)
 
