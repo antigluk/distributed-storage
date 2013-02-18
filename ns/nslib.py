@@ -50,6 +50,53 @@ def set_chunk_size(hash, size):
     meta_rs.set(hash, json.dumps(old))
 
 
+def get_chunk_size(hash):
+    """
+    Returns metadata json "size" entry
+    """
+
+    data = meta_rs.get(hash)
+    if data:
+        data = json.loads(data)
+        return data['size']
+    else:
+        raise ChunkError("chunk %s not exists" % hash)
+
+
+def set_file_size(path, size):
+    """
+    Updates metadata json "size" entry
+    """
+
+    _old = meta_rs.get(path)
+    old = {}
+    if _old:
+        old = json.loads(_old)
+
+    old.update({"size": size})
+
+    # FIXME: check for other storages to hash/size collisions
+    meta_rs.set(path, json.dumps(old))
+
+
+def get_file_size(path):
+    """
+    Returns metadata json "size" entry
+    """
+
+    data = meta_rs.get(path)
+    if data:
+        data = json.loads(data)
+        return data['size']
+    else:
+        chunks, _ = get_file_chunks(path)
+        size = 0
+        for chunk in chunks:
+            size += get_chunk_size(chunk)
+        set_file_size(path, size)
+        return size
+
+
 def chunk_ready_on_storage(hash, storage):
     """
     Marks server as ready with particular chunk
@@ -108,7 +155,7 @@ def get_file_chunks(path):
     Returns list of chunks for file
     """
     if not exists(path):
-        raise FSError("Entry with this name exists")
+        raise FSError("Entry with this name not exists")
 
     chunks = []
     servers = []

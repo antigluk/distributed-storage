@@ -8,7 +8,7 @@ import settings
 
 application = tornado.web.Application([
     (r"/data/(.*)", MainHandler),
-    (r"/ui/", tornado.web.RedirectHandler, {"url":"/ui/fs/", "permanent":False}),
+    (r"/ui/", tornado.web.RedirectHandler, {"url":"/ui/stats/", "permanent":False}),
 
     (r"/ui/fs/", FSUIHandler),
     (r'/ui/fs/(.*)', tornado.web.StaticFileHandler, {'path': settings.staticdir}),
