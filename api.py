@@ -77,6 +77,7 @@ class MainHandler(tornado.web.RequestHandler):
         # Content-Type: application/octet-stream
         # Content-Disposition: attachment; filename="fname.ext"
         path = "/" + path
+        self.path = path
         self.is_alive = True
         if path[-1] == '/':
             try:
