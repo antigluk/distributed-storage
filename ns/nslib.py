@@ -187,7 +187,7 @@ def find_server(hash):
     Returns server to place new chunk
     """
     old = chunk_places(hash)
-    if not old:
+    if not old or (old[0] not in storages.keys()):
         #FIXME: need to check free space on storage
         s_list, full_info = scan_stats()
         #>5*chunk MB free space
