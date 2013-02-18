@@ -29,8 +29,8 @@ def process_chunk(num, chunk_file, hash):
     except nslib.NSLibException, e:
         #FIXME: optimize logging
         with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
-            f.write("Failed store chunk %s for file (%d). Message: %s\n" %
-                (hash, chunk_file, num, e.message))
+            f.write("Failed store chunk %s (%s) for file (%s). Message: %s\n" %
+                (hash, num, chunk_file, e.message))
         return
 
     storage = storages[storage_name]
