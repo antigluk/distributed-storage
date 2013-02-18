@@ -32,3 +32,4 @@ nohup ${DATA_DIR}bin/python ${REPO_DIR}app/application >> ${DATA_DIR}/tornado.lo
 cd ${REPO_DIR}app
 nohup ${DATA_DIR}bin/celery worker -A api >> ${DATA_DIR}/celery_ns_worker.log 2>&1 &
 nohup ${DATA_DIR}bin/celery worker -A api >> ${DATA_DIR}/celery_ns_worker2.log 2>&1 &
+nohup ${DATA_DIR}bin/celery worker -A api >> ${DATA_DIR}/celery_ns_worker3.log 2>&1 &
