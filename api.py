@@ -27,6 +27,7 @@ def process_chunk(num, chunk_file, hash):
         storage_name = nslib.find_server(hash)
         nslib.set_chunk_size(hash, chunk_size)
     except nslib.NSLibException, e:
+        #FIXME: optimize logging
         with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
             f.write("Failed store chunk %s for file (%d). Message: %s\n" %
                 (chunk_file, num, hash, e.message))
@@ -36,6 +37,7 @@ def process_chunk(num, chunk_file, hash):
     if not nslib.is_chunk_on_storage(hash, storage_name):
         storage.store_chunk(chunk_file, hash)
     else:
+        #FIXME: optimize logging
         with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
             f.write("Chunk %s (%d) already on storage %s\n" %
                 (hash, num, storage_name))
@@ -54,6 +56,7 @@ def register_file(path, hashes):
     try:
         nslib.add_file(path, hashes)
     except nslib.FSError, e:
+        #FIXME: optimize logging
         with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
             f.write("Failed file save %s. Exception: %s\n" % (path, e.message))
         return
@@ -63,13 +66,16 @@ def register_file(path, hashes):
 
 
 class MainHandler(tornado.web.RequestHandler):
-    # Need to implement all methods for FUSE filesystem.
+    # FIXME: Need to implement all methods for FUSE filesystem.
     # https://github.com/terencehonles/fusepy/blob/master/examples/sftp.py
 
     # ======= GET ============
 
     @tornado.web.asynchronous
     def get(self, path):
+        # FIXME: header
+        # Content-Type: application/octet-stream
+        # Content-Disposition: attachment; filename="fname.ext"
         path = "/" + path
         if path[-1] == '/':
             try:
@@ -117,7 +123,7 @@ class MainHandler(tornado.web.RequestHandler):
         path = "/" + path
 
         self.path = path
-
+        #FIXME: optimize logging
         with file(os.path.join(settings.datadir, 'process_chunk.log'), 'a+') as f:
             f.write("Uploaded %s size: %d\n" %
                 (path, self.request.content_length))
@@ -139,7 +145,7 @@ class BodyStreamHandler(tornado.httpserver.HTTPParseBody):
         self.read_bytes = 0
         self.chunk_num = 0
         self.chunks = []
-
+        #FIXME: optimize logging
         with file(os.path.join(settings.datadir, 'process_chunk.log'), 'a+') as f:
             f.write("Start uploading size: %d\n" %
                 (self.content_length))
@@ -161,7 +167,7 @@ class BodyStreamHandler(tornado.httpserver.HTTPParseBody):
         sh.mkdir('-p', sh.dirname(TMP).strip())
         with file(TMP, "wb") as f:
             f.write(data)
-
+        #FIXME: optimize logging
         with file(os.path.join(settings.datadir, 'process_chunk.log'), 'a+') as f:
             f.write("Received %d (%s)\n" %
                 (len(data), hash))
