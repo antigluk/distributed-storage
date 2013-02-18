@@ -77,6 +77,7 @@ class MainHandler(tornado.web.RequestHandler):
         # Content-Type: application/octet-stream
         # Content-Disposition: attachment; filename="fname.ext"
         path = "/" + path
+        self.is_alive = True
         if path[-1] == '/':
             try:
                 files = nslib.ls(path)
@@ -102,7 +103,8 @@ class MainHandler(tornado.web.RequestHandler):
             data = self.generator.next()
             self.write(data)
             self.flush()
-            tornado.ioloop.IOLoop.instance().add_callback(self.write_callback)
+            if self.is_alive:
+                tornado.ioloop.IOLoop.instance().add_callback(self.write_callback)
         except StopIteration:
             self.finish()
 
@@ -116,6 +118,9 @@ class MainHandler(tornado.web.RequestHandler):
             with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
                 f.write("Chunk %s received from %s (size %d)\n" %
                     (chunk, server.strip(), len(data)))
+
+    def on_connection_close(self):
+        self.is_alive = False
 
     # ======= POST ============
 
