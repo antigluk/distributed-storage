@@ -73,9 +73,7 @@ class MainHandler(tornado.web.RequestHandler):
 
     @tornado.web.asynchronous
     def get(self, path):
-        # FIXME: header
-        # Content-Type: application/octet-stream
-        # Content-Disposition: attachment; filename="fname.ext"
+        # FIXME: authorization
         path = "/" + path
         self.path = path
         self.is_alive = True
@@ -94,6 +92,16 @@ class MainHandler(tornado.web.RequestHandler):
             chunks = zip(*nslib.get_file_chunks(path))
         except nslib.FSError:
             raise tornado.web.HTTPError(404, "No such file or directory")
+
+        filename = os.path.split(path)[1]
+
+        with file(os.path.join(settings.datadir, 'process_chunk.log'), 'a+') as f:
+            f.write("Start downloading %s, size %s\n" %
+                (path, nslib.get_file_size(path)))
+
+        self.set_header("Content-Type", "application/octet-stream")
+        self.set_header("Content-Length", str(nslib.get_file_size(path)))
+        self.set_header("Content-Disposition", 'attachment; filename="' + filename + '"')
 
         self.generator = self.write_generator(chunks)
         tornado.ioloop.IOLoop.instance().add_callback(self.write_callback)
@@ -125,7 +133,7 @@ class MainHandler(tornado.web.RequestHandler):
         with file(os.path.join(settings.datadir, 'process_chunk.log'), 'a+') as f:
             f.write("Connection closed %s\n" % (self.path))
 
-    # ======= POST ============
+    # ======= PUT ============
 
     def put(self, path):
         path = "/" + path
