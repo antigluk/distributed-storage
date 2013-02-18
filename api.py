@@ -121,6 +121,8 @@ class MainHandler(tornado.web.RequestHandler):
 
     def on_connection_close(self):
         self.is_alive = False
+        with file(os.path.join(settings.datadir, 'process_chunk.log'), 'a+') as f:
+            f.write("Connection closed %s\n" % (self.path))
 
     # ======= POST ============
 
