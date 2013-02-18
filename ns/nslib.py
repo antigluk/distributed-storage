@@ -190,6 +190,9 @@ def find_server(hash):
     if not old:
         #FIXME: need to check free space on storage
         s_list, full_info = scan_stats()
+        #>5*chunk MB free space
+        min_size = 5 * settings.chunk_size
+        s_list = filter(lambda serv: float(serv['size']) - float(serv['used']) > min_size, s_list)
         return sorted(s_list, key=lambda x: x['chunks_count'])[0]['name']
         # return random.choice(storages.keys())
     else:
