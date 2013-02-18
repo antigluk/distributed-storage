@@ -46,7 +46,7 @@ def set_chunk_size(hash, size):
 
     old.update({"size": size})
 
-    # check for other storages to size collisions
+    # FIXME: check for other storages to hash/size collisions
     meta_rs.set(hash, json.dumps(old))
 
 
@@ -115,7 +115,7 @@ def get_file_chunks(path):
 
     for hash in files_rs.lrange(path, 0, -1):
         chunks.append(hash)
-        #FIXME random
+        #FIXME: random
         servers.append(random.choice(chunks_rs.lrange(hash, 0, -1)))
     return chunks, servers
 
@@ -124,6 +124,7 @@ def ls(path):
     """
     Lists directory
     """
+    #FIXME: returns NOT EXISTS on empty directory
     if path[-1] != '/':
         raise FSError("Not a directory")
 
@@ -140,6 +141,7 @@ def find_server(hash):
     """
     old = chunk_places(hash)
     if not old:
+        #FIXME: need to check free space on storage
         s_list, full_info = scan_stats()
         return sorted(s_list, key=lambda x: x['chunks_count'])[0]['name']
         # return random.choice(storages.keys())
@@ -158,6 +160,8 @@ def used_size_on_storage(storage):
 
 
 def full_info():
+    #FIXME: optimization point.
+    #  temporary size storage, recalculate every hour/day etc
     used = 0L
     size = 0L
     count = 0L
@@ -171,6 +175,9 @@ def full_info():
 
 
 def scan_stats(cached=True):
+    #FIXME: return result in float, not strings
+    #FIXME: optimization point. need to remove cache
+    #  temporary stats storage, recalculate every hour/day etc
     #Run this by cron, with cached=False
     TMP_STATS = os.path.join(settings.tmpdir, "fs_stats.dat")
     if cached and os.path.exists(TMP_STATS):
