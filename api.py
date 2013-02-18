@@ -30,7 +30,7 @@ def process_chunk(num, chunk_file, hash):
         #FIXME: optimize logging
         with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
             f.write("Failed store chunk %s for file (%d). Message: %s\n" %
-                (chunk_file, num, hash, e.message))
+                (hash, chunk_file, num, e.message))
         return
 
     storage = storages[storage_name]
