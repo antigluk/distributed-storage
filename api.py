@@ -164,12 +164,12 @@ class BodyStreamHandler(tornado.httpserver.HTTPParseBody):
         # self.chunks = []
         #FIXME: optimize logging
 
-        self.resuming = False
+        self.resuming = True
         self.path = self.request.path[len("/data"):]
 
         if not self.request.headers.get("Content-Range"):
             nslib.new_file(self.path)
-            self.resuming = True
+            self.resuming = False
 
         with file(os.path.join(settings.datadir, 'process_chunk.log'), 'a+') as f:
             f.write("Start uploading size: %d %s (resume: %s)\n" %
