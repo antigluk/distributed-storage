@@ -6,6 +6,7 @@ import tornado.httputil
 import os
 import sha
 import sh
+from math import ceil
 
 from celery import Celery
 
@@ -167,17 +168,28 @@ class BodyStreamHandler(tornado.httpserver.HTTPParseBody):
         self.resuming = True
         self.path = self.request.path[len("/data"):]
 
+        self.step = 0
         if not self.request.headers.get("Content-Range"):
             nslib.new_file(self.path)
             self.resuming = False
+        else:
+            right = int(self.request.headers.get("Content-Range").split("-")[0])
+            count = ceil(right / float(settings.chunk_size))
+            aligned = count * settings.chunk_size
+            self.step = aligned - right
+            if count > len(nslib.chunks_for_path(self.path)):
+                raise Exception("too large offset")
 
         with file(os.path.join(settings.datadir, 'process_chunk.log'), 'a+') as f:
             f.write("Start uploading size: %d %s (resume: %s)\n" %
                 (self.content_length, self.path, self.resuming))
 
-        self.read_chunk()
+        if self.step:
+            self.stream.read_bytes(self.step,  self.read_chunk)
+        else:
+            self.read_chunk()
 
-    def read_chunk(self):
+    def read_chunk(self, data=None):
         buffer_size = settings.chunk_size
         if self.content_left < buffer_size:
             buffer_size = self.content_left
