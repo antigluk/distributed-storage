@@ -15,6 +15,7 @@ address = settings.internal_ip
 chunks_rs = redis.Redis(host=address, port=15002, db=1)
 files_rs = redis.Redis(host=address, port=15002, db=2)
 meta_rs = redis.Redis(host=address, port=15002, db=3)
+files_temp_rs = redis.Redis(host=address, port=15002, db=4)
 
 
 class NSLibException(Exception):
@@ -107,6 +108,10 @@ def chunk_ready_on_storage(hash, storage):
 
 def is_chunk_on_storage(hash, storage):
     return storage in chunks_rs.lrange(hash, 0, -1)
+
+
+def chunk_received(path, hash):
+    files_temp_rs.rpush(path + "/", hash)
 
 # ======= File system =======
 

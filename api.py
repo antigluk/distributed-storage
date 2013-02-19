@@ -186,10 +186,11 @@ class BodyStreamHandler(tornado.httpserver.HTTPParseBody):
             f.write(data)
         #FIXME: optimize logging
         with file(os.path.join(settings.datadir, 'process_chunk.log'), 'a+') as f:
-            f.write("Received %d (%s)\n" %
-                (len(data), hash))
+            f.write("Received %d (%s) %s\n" %
+                (len(data), hash, self.request.path))
 
         self.chunks.append(hash)
+        nslib.chunk_received(self.request.path, hash)
         process_chunk.delay(self.chunk_num, TMP, hash)
 
         self.chunk_num += 1
