@@ -224,4 +224,5 @@ class BodyStreamHandler(tornado.httpserver.HTTPParseBody):
         else:
             self.request.body = nslib.chunks_for_path(self.path)  # self.chunks
             self.request.content_length = self.content_length
+            nslib.file_done(self.path)
             self.done()

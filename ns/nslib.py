@@ -126,6 +126,11 @@ def chunk_received(path, hash):
 def chunks_for_path(path):
     return files_temp_rs.lrange(path, 0, -1)
 
+
+def file_done(path):
+    return files_temp_rs.delete(path)
+
+
 # ======= File system =======
 
 
