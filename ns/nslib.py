@@ -111,8 +111,12 @@ def is_chunk_on_storage(hash, storage):
     return storage in chunks_rs.lrange(hash, 0, -1)
 
 
+def new_file(path):
+    files_temp_rs.delete(path)
+
+
 def chunk_received(path, hash):
-    files_temp_rs.rpush(path + "/", hash)
+    files_temp_rs.rpush(path, hash)
 
 # ======= File system =======
 
@@ -238,14 +242,13 @@ def scan_stats(cached=True):
     #  temporary stats storage, recalculate every hour/day etc
     #Run this by cron, with cached=False
     TMP_STATS = os.path.join(settings.tmpdir, "fs_stats.dat")
-
     LOCK_FILE = os.path.join(settings.tmpdir, "fs_stats.lock")
 
-    while os.path.exists(LOCK_FILE):
-        time.sleep(1)
+    if os.path.exists(LOCK_FILE):
+        return
 
     if cached and os.path.exists(TMP_STATS) and \
-        os.stat(TMP_STATS).st_atime < 180:
+        os.stat(TMP_STATS).st_atime < 60:
 
         stats = open(TMP_STATS).read()
         if stats:
