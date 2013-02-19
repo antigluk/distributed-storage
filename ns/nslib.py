@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import random
+import time
 
 import redis
 
@@ -237,12 +238,21 @@ def scan_stats(cached=True):
     #  temporary stats storage, recalculate every hour/day etc
     #Run this by cron, with cached=False
     TMP_STATS = os.path.join(settings.tmpdir, "fs_stats.dat")
+
+    LOCK_FILE = os.path.join(settings.tmpdir, "fs_stats.lock")
+
+    while os.file.exists(LOCK_FILE):
+        time.sleep(1)
+
     if cached and os.path.exists(TMP_STATS) and \
         os.stat(TMP_STATS).st_atime < 180:
 
         stats = open(TMP_STATS).read()
         if stats:
             return pickle.loads(stats)
+
+    with file(LOCK_FILE, "w") as f:
+        f.write("")
 
     s_list = []
     for storage in storages.values():
@@ -262,6 +272,9 @@ def scan_stats(cached=True):
             "fs_items": fs_items,
            }
     pickle.dump((s_list, info,), open(TMP_STATS, "w"))
+
+    os.remove(LOCK_FILE)
+
     return s_list, info
 
 
