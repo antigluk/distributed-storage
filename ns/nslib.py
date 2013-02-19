@@ -116,7 +116,12 @@ def new_file(path):
 
 
 def chunk_received(path, hash):
-    files_temp_rs.rpush(path, hash)
+    if hash not in chunks_for_path(path):
+        files_temp_rs.rpush(path, hash)
+
+
+def chunks_for_path(path):
+    return files_temp_rs.lrange(path, 0, -1)
 
 # ======= File system =======
 

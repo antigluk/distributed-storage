@@ -161,18 +161,19 @@ class BodyStreamHandler(tornado.httpserver.HTTPParseBody):
 
         self.read_bytes = 0
         self.chunk_num = 0
-        self.chunks = []
+        # self.chunks = []
         #FIXME: optimize logging
 
         self.resuming = False
+        self.path = self.request.path["/data":]
 
         if not self.request.headers.get("Content-Range"):
-            self.new_file(self.request.path["/data":])
+            self.new_file(self.path)
             self.resuming = True
 
         with file(os.path.join(settings.datadir, 'process_chunk.log'), 'a+') as f:
-            f.write("Start uploading size: %d (resume: %s)\n" %
-                (self.content_length, self.resuming))
+            f.write("Start uploading size: %d %s (resume: %s)\n" %
+                (self.content_length, self.path, self.resuming))
 
         self.read_chunk()
 
@@ -194,10 +195,10 @@ class BodyStreamHandler(tornado.httpserver.HTTPParseBody):
         #FIXME: optimize logging
         with file(os.path.join(settings.datadir, 'process_chunk.log'), 'a+') as f:
             f.write("Received %d (%s) %s\n" %
-                (len(data), hash, self.request.path))
+                (len(data), hash, self.path))
 
-        self.chunks.append(hash)
-        nslib.chunk_received(self.request.path["/data":], hash)
+        # self.chunks.append(hash)
+        nslib.chunk_received(self.path, hash)
         process_chunk.delay(self.chunk_num, TMP, hash)
 
         self.chunk_num += 1
@@ -205,6 +206,6 @@ class BodyStreamHandler(tornado.httpserver.HTTPParseBody):
         if self.content_left > 0:
             tornado.ioloop.IOLoop.instance().add_callback(self.read_chunk)
         else:
-            self.request.body = self.chunks
+            self.request.body = nslib.chunks_for_path(self.path)  # self.chunks
             self.request.content_length = self.content_length
             self.done()
