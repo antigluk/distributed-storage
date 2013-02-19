@@ -194,7 +194,7 @@ def find_server(hash):
     old = chunk_places(hash)
     if not old or (old[0] not in storages.keys()):
         #FIXME: need to check free space on storage
-        s_list, full_info = scan_stats(cached=False)
+        s_list, full_info = scan_stats()
         #>5*chunk MB free space
         min_size = 5 * settings.chunk_size
         # s_list = filter(lambda serv: (float(serv['size']) - float(serv['used'])) > min_size, s_list)
@@ -237,7 +237,9 @@ def scan_stats(cached=True):
     #  temporary stats storage, recalculate every hour/day etc
     #Run this by cron, with cached=False
     TMP_STATS = os.path.join(settings.tmpdir, "fs_stats.dat")
-    if cached and os.path.exists(TMP_STATS):
+    if cached and os.path.exists(TMP_STATS) and \
+        os.stat(TMP_STATS).st_atime < 180:
+
         stats = open(TMP_STATS).read()
         if stats:
             return pickle.loads(stats)
