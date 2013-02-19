@@ -111,6 +111,9 @@ def is_chunk_on_storage(hash, storage):
     return storage in chunks_rs.lrange(hash, 0, -1)
 
 
+# ======== Resuming support ==========
+
+
 def new_file(path):
     files_temp_rs.delete(path)
 
