@@ -178,8 +178,11 @@ class BodyStreamHandler(tornado.httpserver.HTTPParseBody):
             count = int(ceil(right / float(settings.chunk_size)))
             aligned = count * settings.chunk_size
             self.step = aligned - right
-            if count > len(nslib.chunks_for_path(self.path)):
+
+            already_uploaded = len(nslib.chunks_for_path(self.path))
+            if count > already_uploaded:
                 raise Exception("too large offset")
+            self.chunk_num = already_uploaded
 
         with file(os.path.join(settings.datadir, 'process_chunk.log'), 'a+') as f:
             f.write("Start uploading size: %d %s (resume: %s, %d)\n" %
