@@ -175,7 +175,7 @@ class BodyStreamHandler(tornado.httpserver.HTTPParseBody):
             self.resuming = False
         else:
             right = int(self.request.headers.get("Content-Range").split("-")[0][len("bytes "):])
-            count = ceil(right / float(settings.chunk_size))
+            count = int(ceil(right / float(settings.chunk_size)))
             aligned = count * settings.chunk_size
             self.step = aligned - right
             if count > len(nslib.chunks_for_path(self.path)):
