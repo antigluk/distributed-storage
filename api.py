@@ -165,7 +165,7 @@ class BodyStreamHandler(tornado.httpserver.HTTPParseBody):
         #FIXME: optimize logging
 
         self.resuming = False
-        self.path = self.request.path["/data":]
+        self.path = self.request.path[len("/data"):]
 
         if not self.request.headers.get("Content-Range"):
             self.new_file(self.path)
