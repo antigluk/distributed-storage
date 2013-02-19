@@ -168,7 +168,7 @@ class BodyStreamHandler(tornado.httpserver.HTTPParseBody):
         self.path = self.request.path[len("/data"):]
 
         if not self.request.headers.get("Content-Range"):
-            self.new_file(self.path)
+            nslib.new_file(self.path)
             self.resuming = True
 
         with file(os.path.join(settings.datadir, 'process_chunk.log'), 'a+') as f:
