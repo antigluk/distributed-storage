@@ -249,11 +249,8 @@ def scan_stats(cached=True):
     TMP_STATS = os.path.join(settings.tmpdir, "fs_stats.dat")
     LOCK_FILE = os.path.join(settings.tmpdir, "fs_stats.lock")
 
-    if os.path.exists(LOCK_FILE):
-        return
-
-    if cached and os.path.exists(TMP_STATS) and \
-        os.stat(TMP_STATS).st_atime < 60:
+    if (cached and os.path.exists(TMP_STATS) and \
+        os.stat(TMP_STATS).st_atime < 60) or os.path.exists(LOCK_FILE):
 
         stats = open(TMP_STATS).read()
         if stats:
