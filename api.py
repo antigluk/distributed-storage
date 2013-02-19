@@ -6,6 +6,7 @@ import tornado.httputil
 import os
 import sha
 import sh
+from math import ceil
 
 from celery import Celery
 
@@ -29,8 +30,8 @@ def process_chunk(num, chunk_file, hash):
     except nslib.NSLibException, e:
         #FIXME: optimize logging
         with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
-            f.write("Failed store chunk %s for file (%d). Message: %s\n" %
-                (chunk_file, num, hash, e.message))
+            f.write("Failed store chunk %s (%s) for file (%s). Message: %s\n" %
+                (hash, num, chunk_file, e.message))
         return
 
     storage = storages[storage_name]
@@ -41,6 +42,7 @@ def process_chunk(num, chunk_file, hash):
         with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
             f.write("Chunk %s (%d) already on storage %s\n" %
                 (hash, num, storage_name))
+        sh.rm("-f", chunk_file)
 
     nslib.chunk_ready_on_storage(hash, storage_name)
 
@@ -160,15 +162,38 @@ class BodyStreamHandler(tornado.httpserver.HTTPParseBody):
 
         self.read_bytes = 0
         self.chunk_num = 0
-        self.chunks = []
+        # self.chunks = []
         #FIXME: optimize logging
+
+        self.resuming = True
+        self.path = self.request.path[len("/data"):]
+
+        self.step = 0
+        aligned = 0
+        if not self.request.headers.get("Content-Range"):
+            nslib.new_file(self.path)
+            self.resuming = False
+        else:
+            right = int(self.request.headers.get("Content-Range").split("-")[0][len("bytes "):])
+            count = int(ceil(right / float(settings.chunk_size)))
+            aligned = count * settings.chunk_size
+            self.step = aligned - right
+
+            already_uploaded = len(nslib.chunks_for_path(self.path))
+            if count > already_uploaded:
+                raise Exception("too large offset")
+            self.chunk_num = already_uploaded
+
         with file(os.path.join(settings.datadir, 'process_chunk.log'), 'a+') as f:
-            f.write("Start uploading size: %d\n" %
-                (self.content_length))
+            f.write("Start uploading size: %d %s (resume: %s, %d)\n" %
+                (self.content_length, self.path, self.resuming, aligned))
 
-        self.read_chunk()
+        if self.step:
+            self.stream.read_bytes(self.step,  self.read_chunk)
+        else:
+            self.read_chunk()
 
-    def read_chunk(self):
+    def read_chunk(self, data=None):
         buffer_size = settings.chunk_size
         if self.content_left < buffer_size:
             buffer_size = self.content_left
@@ -185,10 +210,11 @@ class BodyStreamHandler(tornado.httpserver.HTTPParseBody):
             f.write(data)
         #FIXME: optimize logging
         with file(os.path.join(settings.datadir, 'process_chunk.log'), 'a+') as f:
-            f.write("Received %d (%s)\n" %
-                (len(data), hash))
+            f.write("Received %d (%s) %s\n" %
+                (len(data), hash, self.path))
 
-        self.chunks.append(hash)
+        # self.chunks.append(hash)
+        nslib.chunk_received(self.path, hash)
         process_chunk.delay(self.chunk_num, TMP, hash)
 
         self.chunk_num += 1
@@ -196,6 +222,6 @@ class BodyStreamHandler(tornado.httpserver.HTTPParseBody):
         if self.content_left > 0:
             tornado.ioloop.IOLoop.instance().add_callback(self.read_chunk)
         else:
-            self.request.body = self.chunks
+            self.request.body = nslib.chunks_for_path(self.path)  # self.chunks
             self.request.content_length = self.content_length
             self.done()

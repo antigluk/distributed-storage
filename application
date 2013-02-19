@@ -3,6 +3,7 @@ import tornado.web
 import tornado.ioloop
 from api import MainHandler, BodyStreamHandler
 from ui import FSUIHandler, StatsUIHandler
+from intl import InternalHandler
 
 import settings
 
@@ -17,6 +18,8 @@ application = tornado.web.Application([
     (r'/ui/stats/(.*)', tornado.web.StaticFileHandler, {'path': settings.staticdir}),
 
     (r"/", tornado.web.RedirectHandler, {"url":"/ui/", "permanent":False}),
+
+    (r"/intl/", InternalHandler),
 ])
 
 

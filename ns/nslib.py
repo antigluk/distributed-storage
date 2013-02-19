@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import random
+import time
 
 import redis
 
@@ -15,6 +16,7 @@ address = settings.internal_ip
 chunks_rs = redis.Redis(host=address, port=15002, db=1)
 files_rs = redis.Redis(host=address, port=15002, db=2)
 meta_rs = redis.Redis(host=address, port=15002, db=3)
+files_temp_rs = redis.Redis(host=address, port=15002, db=4)
 
 
 class NSLibException(Exception):
@@ -108,6 +110,22 @@ def chunk_ready_on_storage(hash, storage):
 def is_chunk_on_storage(hash, storage):
     return storage in chunks_rs.lrange(hash, 0, -1)
 
+
+# ======== Resuming support ==========
+
+
+def new_file(path):
+    files_temp_rs.delete(path)
+
+
+def chunk_received(path, hash):
+    if hash not in chunks_for_path(path):
+        files_temp_rs.rpush(path, hash)
+
+
+def chunks_for_path(path):
+    return files_temp_rs.lrange(path, 0, -1)
+
 # ======= File system =======
 
 
@@ -187,9 +205,14 @@ def find_server(hash):
     Returns server to place new chunk
     """
     old = chunk_places(hash)
-    if not old:
+    if not old or (old[0] not in storages.keys()):
         #FIXME: need to check free space on storage
         s_list, full_info = scan_stats()
+        #>5*chunk MB free space
+        min_size = 5 * settings.chunk_size
+        # s_list = filter(lambda serv: (float(serv['size']) - float(serv['used'])) > min_size, s_list)
+        if not s_list:
+            raise ChunkError("All storages FULL!")
         return sorted(s_list, key=lambda x: x['chunks_count'])[0]['name']
         # return random.choice(storages.keys())
     else:
@@ -227,10 +250,17 @@ def scan_stats(cached=True):
     #  temporary stats storage, recalculate every hour/day etc
     #Run this by cron, with cached=False
     TMP_STATS = os.path.join(settings.tmpdir, "fs_stats.dat")
-    if cached and os.path.exists(TMP_STATS):
+    LOCK_FILE = os.path.join(settings.tmpdir, "fs_stats.lock")
+
+    if (cached and os.path.exists(TMP_STATS) and \
+        os.stat(TMP_STATS).st_atime < 60) or os.path.exists(LOCK_FILE):
+
         stats = open(TMP_STATS).read()
         if stats:
             return pickle.loads(stats)
+
+    with file(LOCK_FILE, "w") as f:
+        f.write("")
 
     s_list = []
     for storage in storages.values():
@@ -250,6 +280,9 @@ def scan_stats(cached=True):
             "fs_items": fs_items,
            }
     pickle.dump((s_list, info,), open(TMP_STATS, "w"))
+
+    os.remove(LOCK_FILE)
+
     return s_list, info
 
 
