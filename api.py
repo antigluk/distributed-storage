@@ -169,6 +169,7 @@ class BodyStreamHandler(tornado.httpserver.HTTPParseBody):
         self.path = self.request.path[len("/data"):]
 
         self.step = 0
+        aligned = 0
         if not self.request.headers.get("Content-Range"):
             nslib.new_file(self.path)
             self.resuming = False
@@ -181,8 +182,8 @@ class BodyStreamHandler(tornado.httpserver.HTTPParseBody):
                 raise Exception("too large offset")
 
         with file(os.path.join(settings.datadir, 'process_chunk.log'), 'a+') as f:
-            f.write("Start uploading size: %d %s (resume: %s)\n" %
-                (self.content_length, self.path, self.resuming))
+            f.write("Start uploading size: %d %s (resume: %s, %d)\n" %
+                (self.content_length, self.path, self.resuming, aligned))
 
         if self.step:
             self.stream.read_bytes(self.step,  self.read_chunk)
