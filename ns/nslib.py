@@ -241,7 +241,7 @@ def scan_stats(cached=True):
 
     LOCK_FILE = os.path.join(settings.tmpdir, "fs_stats.lock")
 
-    while os.file.exists(LOCK_FILE):
+    while os.path.exists(LOCK_FILE):
         time.sleep(1)
 
     if cached and os.path.exists(TMP_STATS) and \
