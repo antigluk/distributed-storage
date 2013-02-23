@@ -11,7 +11,7 @@ application = tornado.web.Application([
     (r"/data/(.*)", MainHandler),
     (r"/ui/", tornado.web.RedirectHandler, {"url":"/ui/stats/", "permanent":False}),
 
-    (r"/ui/fs/", FSUIHandler),
+    (r"/ui/fs/(.*)", FSUIHandler),
     (r"/ui/stats/", StatsUIHandler),
 
     (r'/static/(.*)', tornado.web.StaticFileHandler, {'path': settings.staticdir}),
