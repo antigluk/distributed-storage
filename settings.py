@@ -13,11 +13,11 @@ import glob
 
 
 def used_space():
-    return int(sh.sed(sh.awk(sh.quota(), '{print $1}'), '-n', '4p'))
+    return int(sh.sed(sh.awk(sh.quota(), '{print $1}'), '-n', '4p')) * 1024
 
 
 def full_space():
-    return int(sh.sed(sh.awk(sh.quota(), '{print $3}'), '-n', '4p'))
+    return int(sh.sed(sh.awk(sh.quota(), '{print $3}'), '-n', '4p')) * 1024
 
 
 def free_space():
