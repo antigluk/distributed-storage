@@ -25,7 +25,7 @@ def free_space():
 
 
 def available_chunks():
-    return free_space() / chunk_size()
+    return free_space() / chunk_size
 
 FILENAMES = []
 
