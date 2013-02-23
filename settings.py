@@ -9,6 +9,7 @@ chunks_watch_limit = 100
 chunks_threshold = 30
 
 import sh
+import glob
 
 
 def used_space():
@@ -26,8 +27,11 @@ def free_space():
 def available_chunks():
     return free_space() / chunk_size()
 
+FILENAMES = []
 
 try:
     from local_settings import *
 except ImportError:
     pass
+
+FILENAMES += glob.glob(datadir + "*.log")
