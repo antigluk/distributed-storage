@@ -5,6 +5,27 @@ staticdir = "/var/www/"  # os.path.join(os.environ['OPENSHIFT_REPO_DIR'], "app/s
 
 chunk_size = 2 * 1024 * 1024  # 2 MB
 
+chunks_watch_limit = 100
+chunks_threshold = 30
+
+import sh
+
+
+def used_space():
+    return int(sh.sed(sh.awk(sh.quota(), '{print $1}'), '-n', '4p'))
+
+
+def full_space():
+    return int(sh.sed(sh.awk(sh.quota(), '{print $3}'), '-n', '4p'))
+
+
+def free_space():
+    return full_space() - used_space()
+
+
+def available_chunks():
+    return free_space() / chunk_size()
+
 
 try:
     from local_settings import *

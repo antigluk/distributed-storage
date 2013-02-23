@@ -5,8 +5,10 @@ import tornado.httputil
 
 import os
 import sha
-import sh
+import time
 from math import ceil
+
+import sh
 
 from celery import Celery
 
@@ -170,6 +172,9 @@ class BodyStreamHandler(tornado.httpserver.HTTPParseBody):
 
         self.step = 0
         aligned = 0
+
+        self.prev_available_chunks = settings.available_chunks()
+
         if not self.request.headers.get("Content-Range"):
             nslib.new_file(self.path)
             self.resuming = False
@@ -194,6 +199,19 @@ class BodyStreamHandler(tornado.httpserver.HTTPParseBody):
             self.read_chunk()
 
     def read_chunk(self, data=None):
+
+        if settings.available_chunks() < settings.chunks_watch_limit:
+            #FIXME: advance analysis
+            # at least one chunk should be stored while new coming
+            if settings.available_chunks() - self.prev_available_chunks >= 0:
+                tornado.ioloop.IOLoop.instance().add_timeout(time.time() + 5, self.read_chunk)
+
+        self.prev_available_chunks = settings.available_chunks()
+
+        if settings.available_chunks() < settings.chunks_threshold:
+            tornado.ioloop.IOLoop.instance().add_timeout(time.time() + 5, self.read_chunk)
+            return
+
         buffer_size = settings.chunk_size
         if self.content_left < buffer_size:
             buffer_size = self.content_left
