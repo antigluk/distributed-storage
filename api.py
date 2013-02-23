@@ -205,11 +205,18 @@ class BodyStreamHandler(tornado.httpserver.HTTPParseBody):
             # at least one chunk should be stored while new coming
             if settings.available_chunks() - self.prev_available_chunks >= 0:
                 tornado.ioloop.IOLoop.instance().add_timeout(time.time() + 5, self.read_chunk)
+                #FIXME: optimize logging
+                with file(os.path.join(settings.datadir, 'process_chunk.log'), 'a+') as f:
+                    f.write("Local chunk limit reached. Waiting...\n")
+                return
 
         self.prev_available_chunks = settings.available_chunks()
 
         if settings.available_chunks() < settings.chunks_threshold:
             tornado.ioloop.IOLoop.instance().add_timeout(time.time() + 5, self.read_chunk)
+            #FIXME: optimize logging
+            with file(os.path.join(settings.datadir, 'process_chunk.log'), 'a+') as f:
+                f.write("Local chunk threshold reached. Waiting...\n")
             return
 
         buffer_size = settings.chunk_size
