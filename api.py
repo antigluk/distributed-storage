@@ -7,7 +7,7 @@ import os
 import sha
 import time
 from math import ceil
-import datetime
+from datetime import datetime
 
 import sh
 
