@@ -29,6 +29,7 @@ def log(s):
 @celery.task
 def process_chunk(num, chunk_file, hash):
     chunk_size = os.stat(chunk_file).st_size
+    log("Storing chunk %d (%s)" % (num, hash))
 
     try:
         storage_name = nslib.find_server(hash)
