@@ -7,6 +7,7 @@ import os
 import sha
 import time
 from math import ceil
+import datetime
 
 import sh
 
@@ -20,19 +21,20 @@ address = settings.internal_ip
 celery = Celery('tasks', broker='redis://%s:15002/0' % address)
 
 
+def log(s):
+    with file(os.path.join(settings.datadir, 'process_chunk.log'), 'a+') as f:
+        f.write("[%s] %s" % (datetime.now().strftime("%d_%m_%Y_%H-%M-%S"), s))
+
+
 @celery.task
 def process_chunk(num, chunk_file, hash):
-    datadir = settings.datadir
-
     chunk_size = os.stat(chunk_file).st_size
 
     try:
         storage_name = nslib.find_server(hash)
         nslib.set_chunk_size(hash, chunk_size)
     except nslib.NSLibException, e:
-        #FIXME: optimize logging
-        with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
-            f.write("Failed store chunk %s (%s) for file (%s). Message: %s\n" %
+        log("Failed store chunk %s (%s) for file (%s). Message: %s\n" %
                 (hash, num, chunk_file, e.message))
         return
 
@@ -40,33 +42,25 @@ def process_chunk(num, chunk_file, hash):
     if not nslib.is_chunk_on_storage(hash, storage_name):
         storage.store_chunk(chunk_file, hash)
     else:
-        #FIXME: optimize logging
-        with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
-            f.write("Chunk %s (%d) already on storage %s\n" %
+        log("Chunk %s (%d) already on storage %s\n" %
                 (hash, num, storage_name))
         sh.rm("-f", chunk_file)
 
     nslib.chunk_ready_on_storage(hash, storage_name)
 
-    with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
-        f.write("Chunk saved %s in %s (%d)\n" %
+    log("Chunk saved %s in %s (%d)\n" %
             (chunk_file, storage_name, num))
 
 
 @celery.task
 def register_file(path, hashes):
-    datadir = settings.datadir
-
     try:
         nslib.add_file(path, hashes)
     except nslib.FSError, e:
-        #FIXME: optimize logging
-        with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
-            f.write("Failed file save %s. Exception: %s\n" % (path, e.message))
+        log("Failed file save %s. Exception: %s\n" % (path, e.message))
         return
 
-    with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
-        f.write("File saved %s\n" % path)
+    log("File saved %s\n" % path)
 
 
 class MainHandler(tornado.web.RequestHandler):
@@ -99,8 +93,7 @@ class MainHandler(tornado.web.RequestHandler):
 
         filename = os.path.split(path)[1]
 
-        with file(os.path.join(settings.datadir, 'process_chunk.log'), 'a+') as f:
-            f.write("Start downloading %s, size %s\n" %
+        log("Start downloading %s, size %s\n" %
                 (path, nslib.get_file_size(path)))
 
         self.set_header("Content-Type", "application/octet-stream")
@@ -122,20 +115,16 @@ class MainHandler(tornado.web.RequestHandler):
             self.finish()
 
     def write_generator(self, chunks):
-        datadir = settings.datadir
-
         for chunk, server in chunks:
             data = storages[server].get_chunk(chunk)
             yield data
 
-            with file(os.path.join(datadir, 'process_chunk.log'), 'a+') as f:
-                f.write("Chunk %s received from %s (size %d)\n" %
+            log("Chunk %s received from %s (size %d)\n" %
                     (chunk, server.strip(), len(data)))
 
     def on_connection_close(self):
         self.is_alive = False
-        with file(os.path.join(settings.datadir, 'process_chunk.log'), 'a+') as f:
-            f.write("Connection closed %s\n" % (self.path))
+        log("Connection closed %s\n" % (self.path))
 
     # ======= PUT ============
 
@@ -144,8 +133,7 @@ class MainHandler(tornado.web.RequestHandler):
 
         self.path = path
         #FIXME: optimize logging
-        with file(os.path.join(settings.datadir, 'process_chunk.log'), 'a+') as f:
-            f.write("Uploaded %s size: %d\n" %
+        log("Uploaded %s size: %d\n" %
                 (path, self.request.content_length))
 
         self.chunks = self.request.body
@@ -189,8 +177,7 @@ class BodyStreamHandler(tornado.httpserver.HTTPParseBody):
                 raise Exception("too large offset")
             self.chunk_num = already_uploaded
 
-        with file(os.path.join(settings.datadir, 'process_chunk.log'), 'a+') as f:
-            f.write("Start uploading size: %d %s (resume: %s, %d)\n" %
+        log("Start uploading size: %d %s (resume: %s, %d)\n" %
                 (self.content_length, self.path, self.resuming, aligned))
 
         if self.step:
@@ -205,18 +192,14 @@ class BodyStreamHandler(tornado.httpserver.HTTPParseBody):
             # at least one chunk should be stored while new coming
             if settings.available_chunks() - self.prev_available_chunks >= 0:
                 tornado.ioloop.IOLoop.instance().add_timeout(time.time() + 5, self.read_chunk)
-                #FIXME: optimize logging
-                with file(os.path.join(settings.datadir, 'process_chunk.log'), 'a+') as f:
-                    f.write("Local chunk limit reached. Waiting...\n")
+                log("Local chunk limit reached. Waiting...\n")
                 return
 
         self.prev_available_chunks = settings.available_chunks()
 
         if settings.available_chunks() < settings.chunks_threshold:
             tornado.ioloop.IOLoop.instance().add_timeout(time.time() + 5, self.read_chunk)
-            #FIXME: optimize logging
-            with file(os.path.join(settings.datadir, 'process_chunk.log'), 'a+') as f:
-                f.write("Local chunk threshold reached. Waiting...\n")
+            log("Local chunk threshold reached. Waiting...\n")
             return
 
         buffer_size = settings.chunk_size
@@ -233,9 +216,7 @@ class BodyStreamHandler(tornado.httpserver.HTTPParseBody):
         sh.mkdir('-p', sh.dirname(TMP).strip())
         with file(TMP, "wb") as f:
             f.write(data)
-        #FIXME: optimize logging
-        with file(os.path.join(settings.datadir, 'process_chunk.log'), 'a+') as f:
-            f.write("Received %d (%s) %s\n" %
+        log("Received %d (%s) %s\n" %
                 (len(data), hash, self.path))
 
         # self.chunks.append(hash)
