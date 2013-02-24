@@ -94,6 +94,7 @@ def remote_upload_file(url, name):
         total_size = response.info().getheader('Content-Length').strip()
         total_size = int(total_size)
         bytes_so_far = 0
+        log("downloading %d b" % total_size)
         with file(file_name, "w") as f:
             while 1:
                 chunk = response.read(chunk_size)
