@@ -82,7 +82,7 @@ def remote_upload_file(url, name):
             # log("Remote download %s OK: %s" % (name, response.body))
             log("Remote download %s: downloaded.")
 
-            file(file_name, "w").write(response.data)
+            file(file_name, "w").write(response.body)
             http_client.fetch("http://%s/data/remote/%s" % (settings.internal_ip, name),
                 upload_handler, method='PUT', headers=None,
                 body=file(file_name, "w").read())
