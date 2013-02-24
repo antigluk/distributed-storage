@@ -21,14 +21,8 @@ def require_basic_auth(handler_class):
             auth_decoded = base64.decodestring(auth_header[6:])
             # kwargs['basicauth_user'], kwargs['basicauth_pass'] = auth_decoded.split(':', 2)
             user, pwd = auth_decoded.split(':', 2)
-            real_user, real_pwd = os.path.join(settings.datadir, 'pwd').strip().split(":")
-            if (user == real_user) and (real_pwd == pwd):
-                return True
-            else:
-                handler.set_status(401)
-                handler.set_header('WWW-Authenticate', 'Basic realm=Restricted')
-                handler._transforms = []
-                handler.finish()
+            real_user, real_pwd = file(os.path.join(settings.datadir, 'pwd')).read().strip().split(":")
+            return (user == real_user) and (real_pwd == pwd)
 
         def _execute(self, transforms, *args, **kwargs):
             if not require_basic_auth(self, kwargs):
