@@ -110,21 +110,49 @@ def remote_upload_file(url, name):
 
         return bytes_so_far
 
+    # from cStringIO import StringIO
+
+    class Progress(object):
+        def __init__(self):
+            self._seen = 0.0
+
+        def update(self, total, size, name):
+            self._seen += size
+            pct = (self._seen / total) * 100.0
+            log('%s progress: %.2f' % (name, pct))
+
+    class file_with_callback(file):
+        def __init__(self, path, mode, callback, *args):
+            file.__init__(self, path, mode)
+            self.seek(0, os.SEEK_END)
+            self._total = self.tell()
+            self.seek(0)
+            self._callback = callback
+            self._args = args
+
+        def __len__(self):
+            return self._total
+
+        def read(self, size):
+            data = file.read(self, size)
+            self._callback(self._total, len(data), *self._args)
+            return data
+
     log("Remote download initialized: %s, url %s" %
             (name, url))
     file_name = os.path.join(settings.tmpdir, 'cache', name)
 
     response = urllib2.urlopen(url)
     chunk_read(response, report_hook=chunk_report, file_name=file_name)
-    # file(file_name, "w").write(response.read())
     log("Remote download %s: downloaded.")
 
-    http_client = tornado.httpclient.AsyncHTTPClient()
-    http_client.fetch("https://1-antigluk.rhcloud.com/data/remote/%s" % (name),  # settings.internal_ip,
-        upload_handler, method='PUT', headers={"Content-Type": "application/octet-stream"},
-        body=file(file_name).read(), validate_cert=False)
-    # http_client.fetch(url, download_handler)
-    tornado.ioloop.IOLoop.instance().start()
+    response = urllib2.urlopen("https://1-antigluk.rhcloud.com/data/remote/%s" % (name))
+
+    progress = Progress()
+    stream = file_with_callback(file_name, 'rb', progress.update, file_name)
+    req = urllib2.Request(url, stream, {"Content-Type": "application/octet-stream"})
+    res = urllib2.urlopen(req).read()
+    log("uploaded OK: %s" % res)
 
 
 class RemoteUploadHandler(tornado.web.RequestHandler):
