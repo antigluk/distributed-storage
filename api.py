@@ -71,8 +71,6 @@ def register_file(path, hashes):
 def remote_upload_file(url, name):
     #http://stackoverflow.com/questions/2028517/python-urllib2-progress-hook
 
-    prev_percent = 0
-
     def upload_handler(response):
         if response.error:
             log("Remote download error [2]: %s" % response.error)
@@ -81,10 +79,11 @@ def remote_upload_file(url, name):
         tornado.ioloop.IOLoop.instance().stop()
         sh.rm("-f", file_name)
 
-    def chunk_report(bytes_so_far, chunk_size, total_size):
+    def chunk_report(bytes_so_far, chunk_size, total_size, pp=[0]):
         percent = float(bytes_so_far) / total_size
         percent = round(percent * 100, 2)
-        if (percent - prev_percent >= 2):
+        if ((percent - pp[0]) >= 2):
+            pp[0] = percent
             log("Downloaded %d of %d bytes (%0.2f%%)\r" %
                 (bytes_so_far, total_size, percent))
 
