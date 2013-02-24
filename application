@@ -30,5 +30,5 @@ body_handlers = [
 
 if __name__ == "__main__":
     address = settings.internal_ip
-    application.listen(8080, address=address, body_handlers=body_handlers)
+    application.listen(8080, address=address, body_handlers=body_handlers, debug=True)
     tornado.ioloop.IOLoop.instance().start()
