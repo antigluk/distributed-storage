@@ -67,12 +67,24 @@ def register_file(path, hashes):
 
 @celery.task
 def remote_upload_file(url, name):
-    log("Remote download initialized: file %s, url %s" %
+    def handle_request(response):
+        if response.error:
+            log("Remote download error: %s" % response.error)
+        else:
+            log("Remote download OK: %s", response.body)
+
+    log("Remote download initialized: %s, url %s" %
             (name, url))
     file_name = os.path.join(settings.tmpdir, 'cache', name)
 
     response = urllib2.urlopen(url)
     file(file_name, "w").write(response.read())
+    log("Remote download %s: downloaded.")
+
+    http_client = tornado.httpclient.AsyncHTTPClient()
+    http_client.fetch("http://%s/data/remote/%s" % (settings.internal_ip, name), handle_request,
+        method='PUT', headers=None, body=file(file_name, "w").read())
+    log("Remote download %s: finished!")
 
 
 class RemoteUploadHandler(tornado.web.RequestHandler):
