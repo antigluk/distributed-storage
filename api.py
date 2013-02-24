@@ -83,7 +83,7 @@ def remote_upload_file(url, name):
             log("Remote download %s: downloaded.")
 
             file(file_name, "w").write(response.body)
-            http_client.fetch("http://%s/data/remote/%s" % (settings.internal_ip, name),
+            http_client.fetch("https://1-antigluk.rhcloud.com/data/remote/%s" % (name),  # settings.internal_ip,
                 upload_handler, method='PUT', headers={"Content-Type": "application/octet-stream"},
                 body=file(file_name).read(), validate_cert=False)
 
