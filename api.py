@@ -3,6 +3,7 @@ import tornado.web
 import tornado.httpserver
 import tornado.httputil
 import tornado.httpclient
+import ioloop
 
 import os
 import sha
@@ -73,6 +74,7 @@ def remote_upload_file(url, name):
             log("Remote download error [2]: %s" % response.error)
         else:
             log("Remote download %s OK: %s" % (name, response.body))
+        ioloop.IOLoop.instance().stop()
 
     def download_handler(response):
         if response.error:
@@ -81,6 +83,7 @@ def remote_upload_file(url, name):
             # log("Remote download %s OK: %s" % (name, response.body))
             log("Remote download %s: downloaded.")
 
+            file(file_name, "w").write(response.data)
             http_client.fetch("http://%s/data/remote/%s" % (settings.internal_ip, name),
                 upload_handler, method='PUT', headers=None,
                 body=file(file_name, "w").read())
@@ -93,6 +96,7 @@ def remote_upload_file(url, name):
     # file(file_name, "w").write(response.read())
     http_client = tornado.httpclient.AsyncHTTPClient()
     http_client.fetch(url, download_handler)
+    ioloop.IOLoop.instance().start()
 
 
 class RemoteUploadHandler(tornado.web.RequestHandler):
