@@ -75,26 +75,31 @@ def remote_upload_file(url, name):
             log("Remote download %s OK: %s" % (name, response.body))
         tornado.ioloop.IOLoop.instance().stop()
 
-    def download_handler(response):
-        if response.error:
-            log("Remote download error [1]: %s" % response.error)
-        else:
-            # log("Remote download %s OK: %s" % (name, response.body))
-            log("Remote download %s: downloaded.")
+    # def download_handler(response):
+    #     if response.error:
+    #         log("Remote download error [1]: %s" % response.error)
+    #     else:
+    #         # log("Remote download %s OK: %s" % (name, response.body))
+    #         log("Remote download %s: downloaded.")
 
-            file(file_name, "w").write(response.body)
-            http_client.fetch("https://1-antigluk.rhcloud.com/data/remote/%s" % (name),  # settings.internal_ip,
-                upload_handler, method='PUT', headers={"Content-Type": "application/octet-stream"},
-                body=file(file_name).read(), validate_cert=False)
+    #         file(file_name, "w").write(response.body)
+    #         http_client.fetch("https://1-antigluk.rhcloud.com/data/remote/%s" % (name),  # settings.internal_ip,
+    #             upload_handler, method='PUT', headers={"Content-Type": "application/octet-stream"},
+    #             body=file(file_name).read(), validate_cert=False)
 
     log("Remote download initialized: %s, url %s" %
             (name, url))
     file_name = os.path.join(settings.tmpdir, 'cache', name)
 
-    # response = urllib2.urlopen(url)
-    # file(file_name, "w").write(response.read())
+    response = urllib2.urlopen(url)
+    file(file_name, "w").write(response.read())
+    log("Remote download %s: downloaded.")
+
     http_client = tornado.httpclient.AsyncHTTPClient()
-    http_client.fetch(url, download_handler)
+    http_client.fetch("https://1-antigluk.rhcloud.com/data/remote/%s" % (name),  # settings.internal_ip,
+        upload_handler, method='PUT', headers={"Content-Type": "application/octet-stream"},
+        body=file(file_name).read(), validate_cert=False)
+    # http_client.fetch(url, download_handler)
     tornado.ioloop.IOLoop.instance().start()
 
 
