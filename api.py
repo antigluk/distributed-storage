@@ -10,6 +10,7 @@ import time
 from math import ceil
 from datetime import datetime
 import urllib2
+import sys
 
 import sh
 
@@ -68,31 +69,54 @@ def register_file(path, hashes):
 
 @celery.task
 def remote_upload_file(url, name):
+    #http://stackoverflow.com/questions/2028517/python-urllib2-progress-hook
+
+    prev_percent = 0
+
     def upload_handler(response):
         if response.error:
             log("Remote download error [2]: %s" % response.error)
         else:
             log("Remote download %s OK: %s" % (name, response.body))
         tornado.ioloop.IOLoop.instance().stop()
+        sh.rm("-f", file_name)
 
-    # def download_handler(response):
-    #     if response.error:
-    #         log("Remote download error [1]: %s" % response.error)
-    #     else:
-    #         # log("Remote download %s OK: %s" % (name, response.body))
-    #         log("Remote download %s: downloaded.")
+    def chunk_report(bytes_so_far, chunk_size, total_size):
+        percent = float(bytes_so_far) / total_size
+        percent = round(percent * 100, 2)
+        if (percent - prev_percent >= 2):
+            log("Downloaded %d of %d bytes (%0.2f%%)\r" %
+                (bytes_so_far, total_size, percent))
 
-    #         file(file_name, "w").write(response.body)
-    #         http_client.fetch("https://1-antigluk.rhcloud.com/data/remote/%s" % (name),  # settings.internal_ip,
-    #             upload_handler, method='PUT', headers={"Content-Type": "application/octet-stream"},
-    #             body=file(file_name).read(), validate_cert=False)
+        if bytes_so_far >= total_size:
+            sys.stdout.write('\n')
+
+    def chunk_read(response, chunk_size=8192, report_hook=None, file_name=None):
+        total_size = response.info().getheader('Content-Length').strip()
+        total_size = int(total_size)
+        bytes_so_far = 0
+        with file(file_name, "w") as f:
+            while 1:
+                chunk = response.read(chunk_size)
+                bytes_so_far += len(chunk)
+
+                if not chunk:
+                    break
+
+                f.write(chunk)
+
+                if report_hook:
+                    report_hook(bytes_so_far, chunk_size, total_size)
+
+        return bytes_so_far
 
     log("Remote download initialized: %s, url %s" %
             (name, url))
     file_name = os.path.join(settings.tmpdir, 'cache', name)
 
     response = urllib2.urlopen(url)
-    file(file_name, "w").write(response.read())
+    chunk_read(response, report_hook=chunk_report, file_name=file_name)
+    # file(file_name, "w").write(response.read())
     log("Remote download %s: downloaded.")
 
     http_client = tornado.httpclient.AsyncHTTPClient()
