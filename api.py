@@ -8,6 +8,7 @@ import sha
 import time
 from math import ceil
 from datetime import datetime
+import urllib2
 
 import sh
 
@@ -62,6 +63,16 @@ def register_file(path, hashes):
         return
 
     log("File saved %s" % path)
+
+
+class RemoteUploadHandler(tornado.web.RequestHandler):
+    def post(self):
+        url = self.get_argument('url', None)
+        name = self.get_argument('name', sha.sha(url).hexdigest())
+        file_name = os.path.join(settings.tmpdir, 'cache', name)
+
+        response = urllib2.urlopen(url)
+        file(file_name, "w").write(response.read())
 
 
 class MainHandler(tornado.web.RequestHandler):

@@ -19,6 +19,8 @@ application = tornado.web.Application([
     (r"/", tornado.web.RedirectHandler, {"url":"/ui/", "permanent":False}),
 
     (r"/intl/", InternalHandler),
+
+    (r"/remote_upload/", RemoteUploadHandler),
 ])
 
 
