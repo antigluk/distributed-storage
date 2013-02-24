@@ -65,16 +65,23 @@ def register_file(path, hashes):
     log("File saved %s" % path)
 
 
+@celery.task
+def remote_upload_file(url, name):
+    log("Remote download initialized: file %s, url %s" %
+            (name, url))
+    file_name = os.path.join(settings.tmpdir, 'cache', name)
+
+    response = urllib2.urlopen(url)
+    file(file_name, "w").write(response.read())
+
+
 class RemoteUploadHandler(tornado.web.RequestHandler):
     def post(self):
         url = self.get_argument('url', None)
         name = self.get_argument('name', sha.sha(url).hexdigest())
-        log("Remote download initialized: file %s, url %s" %
-                (name, url))
-        file_name = os.path.join(settings.tmpdir, 'cache', name)
+        remote_upload_file.delay(url, name)
 
-        response = urllib2.urlopen(url)
-        file(file_name, "w").write(response.read())
+        self.redirect("/ui/fs/")
 
 
 class MainHandler(tornado.web.RequestHandler):
