@@ -84,7 +84,7 @@ def remote_upload_file(url, name):
 
             file(file_name, "w").write(response.body)
             http_client.fetch("http://%s/data/remote/%s" % (settings.internal_ip, name),
-                upload_handler, method='PUT', headers=None,
+                upload_handler, method='PUT', headers={"Content-Type": "application/octet-stream"},
                 body=file(file_name).read(), validate_cert=False)
 
     log("Remote download initialized: %s, url %s" %
