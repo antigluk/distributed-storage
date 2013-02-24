@@ -21,7 +21,7 @@ def require_basic_auth(handler_class):
             auth_decoded = base64.decodestring(auth_header[6:])
             # kwargs['basicauth_user'], kwargs['basicauth_pass'] = auth_decoded.split(':', 2)
             user, pwd = auth_decoded.split(':', 2)
-            real_user, real_pwd = file(os.path.join(settings.datadir, 'pwd')).read().strip().split(":")
+            real_user, real_pwd = file(os.path.join(settings.datadir, 'pwd')).read().strip().split(":", 2)
             return (user == real_user) and (real_pwd == pwd)
 
         def _execute(self, transforms, *args, **kwargs):
