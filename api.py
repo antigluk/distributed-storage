@@ -151,6 +151,8 @@ def remote_upload_file(url, name):
     progress = Progress()
     stream = file_with_callback(file_name, 'rb', progress.update, file_name)
     req = urllib2.Request(url, stream, {"Content-Type": "application/octet-stream"})
+    # request.add_header('Content-Type', 'your/contenttype')
+    req.get_method = lambda: 'PUT'
     res = urllib2.urlopen(req).read()
     log("uploaded OK: %s" % res)
 
