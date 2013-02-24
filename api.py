@@ -146,11 +146,12 @@ def remote_upload_file(url, name):
     chunk_read(response, report_hook=chunk_report, file_name=file_name)
     log("Remote download %s: downloaded.")
 
-    response = urllib2.urlopen("https://1-antigluk.rhcloud.com/data/remote/%s" % (name))
+    # response = urllib2.Request("https://1-antigluk.rhcloud.com/data/remote/%s" % (name))
 
     progress = Progress()
     stream = file_with_callback(file_name, 'rb', progress.update, file_name)
-    req = urllib2.Request(url, stream, {"Content-Type": "application/octet-stream"})
+    req = urllib2.Request("https://1-antigluk.rhcloud.com/data/remote/%s",
+        stream, {"Content-Type": "application/octet-stream"})
     # request.add_header('Content-Type', 'your/contenttype')
     req.get_method = lambda: 'PUT'
     res = urllib2.urlopen(req).read()
