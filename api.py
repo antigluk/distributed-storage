@@ -2,6 +2,7 @@ import tornado.ioloop
 import tornado.web
 import tornado.httpserver
 import tornado.httputil
+import tornado.httpclient
 
 import os
 import sha
