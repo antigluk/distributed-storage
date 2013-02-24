@@ -69,6 +69,8 @@ class RemoteUploadHandler(tornado.web.RequestHandler):
     def post(self):
         url = self.get_argument('url', None)
         name = self.get_argument('name', sha.sha(url).hexdigest())
+        log("Remote download initialized: file %s, url %s" %
+                (name, url))
         file_name = os.path.join(settings.tmpdir, 'cache', name)
 
         response = urllib2.urlopen(url)
