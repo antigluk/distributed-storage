@@ -24,7 +24,7 @@ chmod +x ${DATA_DIR}redis/bin/redis-server
 
 chmod +x ${REPO_DIR}app/application
 
-nohup ${DATA_DIR}bin/python ${REPO_DIR}app/application >> ${DATA_DIR}/tornado.log 2>&1 &
+nohup ${DATA_DIR}bin/python ${REPO_DIR}app/application --logging=DEBUG >> ${DATA_DIR}/tornado.log 2>&1 &
 
 
 # ================= Celery worker ====================
