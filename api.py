@@ -153,7 +153,7 @@ def remote_upload_file(url, name):
     req = urllib2.Request("https://1-antigluk.rhcloud.com/data/remote/%s",
         stream, {"Content-Type": "application/octet-stream"})
     # request.add_header('Content-Type', 'your/contenttype')
-    req.get_method = lambda: 'PUT'
+    # req.get_method = lambda: 'PUT'
     try:
         res = urllib2.urlopen(req).read()
         log("uploaded OK: %s" % res)
