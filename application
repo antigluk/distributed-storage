@@ -29,6 +29,9 @@ body_handlers = [
 ]
 
 if __name__ == "__main__":
+    import tornado.options
+    tornado.options.parse_command_line()
+
     address = settings.internal_ip
     application.listen(8080, address=address, body_handlers=body_handlers)
     tornado.ioloop.IOLoop.instance().start()
